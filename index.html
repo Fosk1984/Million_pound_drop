@@ -220,14 +220,13 @@
      Add a Web App and paste your config below. Enable anonymous auth (or none; we store no PII).
   */
   const firebaseConfig = {
-    apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
-    authDomain: "million-pound-drop-a1acc.firebaseapp.com",
-    databaseURL: "https://million-pound-drop-a1acc-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "million-pound-drop-a1acc",
-    storageBucket: "million-pound-drop-a1acc.firebasestorage.app",
-    messagingSenderId: "866523395054",
-    appId: "1:866523395054:web:dbbcd7c1b281cac32994ff",
-    measurementId: "G-6VRXQSGG4H"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
   };
 
   // Load SDKs from esm.run to keep single-file deploy friendly
@@ -276,6 +275,9 @@
   const teamsGrid = el('teamsGrid');
   const roomLabel = el('roomLabel');
   const teamCount = el('teamCount');
+  // FIX: bind prev/next round buttons (were missing and caused a ReferenceError)
+  const prevRound = el('prevRound');
+  const nextRound = el('nextRound');
 
   // Prefill inputs
   roomInput.value = room;
@@ -575,4 +577,4 @@
 </script>
 </body>
 </html>
-                  
+
