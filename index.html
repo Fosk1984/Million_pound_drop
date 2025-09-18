@@ -3,578 +3,62 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Million Pound Drop – 7 Teams</title>
+  <title>Million Pound Drop – Launcher</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
   <style>
-    :root {
-      --bg: #0b1020;      /* deep blue */
-      --card: #121a36;    /* navy card */
-      --muted: #7c88b0;   /* muted text */
-      --accent: #5eead4;  /* teal */
-      --good: #22c55e;    /* green */
-      --bad: #ef4444;     /* red */
-      --warn: #f59e0b;    /* amber */
-      --ink: #e6ecff;     /* near-white */
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1000px 600px at 20% -10%, #1a2452 0, #0b1020 60%),
-                  radial-gradient(800px 500px at 110% 10%, #1b3355 0, #0b1020 60%),
-                  var(--bg);
-      color: var(--ink);
-    }
-    .wrap{max-width:1200px; margin:0 auto; padding:20px 16px 80px}
-
-    header{
-      display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom:16px;
-    }
-    .title{font-weight:800; letter-spacing:.3px}
-    .subtitle{color:var(--muted); font-size:.95rem}
-
-    .grid{display:grid; gap:16px}
-    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-    @media (max-width:1024px){.grid.cols-3,.grid.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
-    @media (max-width:720px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr}}
-
-    .card{background:linear-gradient(180deg, #16214a 0, #0f1740 100%); border:1px solid rgba(255,255,255,.08); border-radius:18px; box-shadow: 0 10px 30px rgba(0,0,0,.35); overflow:hidden}
-    .card h3{margin:0 0 8px}
-    .card .pad{padding:16px}
+    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--ink:#e6ecff}
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
+    .wrap{max-width:720px;margin:0 auto;padding:32px 16px 80px}
+    .card{background:linear-gradient(180deg,#16214a 0,#0f1740 100%);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
+    .pad{padding:18px}
+    .title{font-weight:800;letter-spacing:.3px;font-size:28px}
     .muted{color:var(--muted)}
-
-    .row{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
-    .row > *{flex:1}
-
-    input, select, button{
-      background:#0e1637; border:1px solid rgba(255,255,255,.12); color:var(--ink); border-radius:12px; padding:10px 12px; font-size:15px;
-    }
-    input::placeholder{color:#9aa5cc}
-
-    button{cursor:pointer; border:1px solid rgba(255,255,255,.18); background:linear-gradient(180deg, #1a2a68 0,#14204f 100%)}
-    button.ghost{background:transparent}
-    button.primary{background:linear-gradient(180deg, #00b3a4 0,#0aa596 100%); border: none; color:#001b18; font-weight:700}
-    button.danger{background:linear-gradient(180deg, #ff6672 0,#ef4444 100%); border:none}
-    button.warn{background:linear-gradient(180deg, #ffd166 0,#f59e0b 100%); border:none; color:#261b00}
-
-    .pill{display:inline-block; padding:4px 10px; border-radius:999px; background:#0d1533; border:1px solid rgba(255,255,255,.08); font-size:12px; color:var(--muted)}
-
-    .stack{display:flex; flex-direction:column; gap:10px}
-
-    .barRow{display:grid; grid-template-columns:40px 1fr 80px; align-items:center; gap:10px}
-    .bar{height:18px; background:#0b1434; border:1px solid rgba(255,255,255,.1); border-radius:10px; overflow:hidden; position:relative}
-    .bar > span{display:block; height:100%; width:0%; background:linear-gradient(90deg, rgba(94,234,212,.2), rgba(94,234,212,.8)); transition: width .5s ease}
-    .bar.bad > span{background:linear-gradient(90deg, rgba(239,68,68,.25), rgba(239,68,68,.9))}
-    .bar.good > span{background:linear-gradient(90deg, rgba(34,197,94,.25), rgba(34,197,94,.9))}
-
-    .money{font-feature-settings:"tnum" on, "lnum" on; font-variant-numeric:tabular-nums}
-
-    .teamCard h4{margin:0}
-
-    .footerNote{color:#9aa5cc; font-size:.9rem; margin-top:12px}
-
-    .split input[type=number]{width:100%; text-align:center}
-
-    .tray{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:8px}
-    .tray .cell{background:#0b1434; border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:8px; text-align:center}
-    .cell.drop{animation: drop 900ms ease forwards}
-    @keyframes drop{0%{transform:translateY(0); opacity:1} 80%{transform:translateY(32px); opacity:.6} 100%{transform:translateY(80px); opacity:0}}
-
-    .big{font-size:28px; font-weight:800}
-    .center{text-align:center}
-
-    .hide{display:none}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    input,button{background:#0e1637;border:1px solid rgba(255,255,255,.12);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px}
+    button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%)}
+    button.primary{background:linear-gradient(180deg,#00b3a4 0,#0aa596 100%);border:none;color:#001b18;font-weight:700}
+    .grid{display:grid;gap:12px}
+    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(max-width:700px){.grid.cols-2{grid-template-columns:1fr}}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div>
-      <div class="title big">Million Pound Drop – 7 Teams</div>
-      <div class="subtitle">Each team (one phone) splits £1,000,000 across A–D. Host reveals the answer; wrong money drops.</div>
+  <div class="card">
+    <div class="pad">
+      <div class="title">Million Pound Drop – Launcher</div>
+      <p class="muted">Enter a room code (e.g., <b>KEELE-2025</b>) and optionally a team name. Use the buttons to open each view in a new tab with the correct room. Team name (if set) is stored locally so the Team page picks it up.</p>
+      <div class="row" style="margin:12px 0">
+        <input id="roomInput" placeholder="Room code (e.g. KEELE-2025)" />
+        <input id="teamInput" placeholder="Team name (for Team view)" />
+      </div>
+      <div class="grid cols-2">
+        <button id="openHost" class="primary">Open Host View</button>
+        <button id="openTeam" class="primary">Open Team View</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button id="openSpectator">Open Spectator View</button>
+        <span class="pill">Files must be in the repo root: <code>host.html</code>, <code>team.html</code>, <code>spectator.html</code></span>
+      </div>
     </div>
-    <div class="row" style="max-width:560px">
-      <input id="roomInput" placeholder="Room code (e.g. KEELE-2025)" />
-      <input id="teamInput" placeholder="Team name (e.g. Team 1)" />
-      <button id="joinBtn" class="primary">Join / Switch</button>
-    </div>
-  </header>
-
-  <div class="grid cols-2">
-    <!-- Left: Team Phone Panel -->
-    <section class="card">
-      <div class="pad">
-        <h3>Team Phone Panel</h3>
-        <div class="muted">Use this on each team phone. Ensure the team joins the correct <b>room</b> and sets their <b>team name</b> above.</div>
-      </div>
-      <div class="pad split">
-        <div class="row" style="align-items:flex-end">
-          <div>
-            <div class="pill">Round</div>
-            <div class="big" id="roundNum">1</div>
-          </div>
-          <div>
-            <div class="pill">Time left</div>
-            <div class="big" id="timeLeft">—</div>
-          </div>
-          <div style="text-align:right">
-            <div class="pill">Your Balance</div>
-            <div class="big money" id="teamBalance">£1,000,000</div>
-          </div>
-        </div>
-
-        <div class="footerNote">Allocate your pot as <b>tokens</b> (1 token = £1,000). Max total = 1000 tokens per round.</div>
-
-        <div class="grid cols-4">
-          <div>
-            <label>A</label>
-            <input type="number" id="aInput" min="0" max="1000" value="0" />
-          </div>
-          <div>
-            <label>B</label>
-            <input type="number" id="bInput" min="0" max="1000" value="0" />
-          </div>
-          <div>
-            <label>C</label>
-            <input type="number" id="cInput" min="0" max="1000" value="0" />
-          </div>
-          <div>
-            <label>D</label>
-            <input type="number" id="dInput" min="0" max="1000" value="0" />
-          </div>
-        </div>
-
-        <div class="row" style="align-items:center">
-          <div class="pill">Allocated: <span id="allocated">0</span> / 1000 tokens</div>
-          <div class="pill">Remaining: <span id="remaining">1000</span> tokens</div>
-          <button id="maxEvenBtn" type="button">Split Evenly</button>
-          <button id="clearBtn" type="button" class="ghost">Clear</button>
-          <button id="submitBtn" type="button" class="primary">Lock In</button>
-        </div>
-        <div class="footerNote" id="teamMsg">Waiting for the host to start…</div>
-      </div>
-    </section>
-
-    <!-- Right: Host / Main Screen -->
-    <section class="card">
-      <div class="pad">
-        <h3>Host Console / Main Screen</h3>
-        <div class="muted">Use this on the projector. Toggle <b>Host Mode</b> to control rounds, timing and reveal the correct answer.</div>
-      </div>
-      <div class="pad">
-        <div class="row" style="align-items:flex-end">
-          <div>
-            <label>Host Mode</label><br/>
-            <label class="pill"><input id="hostToggle" type="checkbox" /> Enable</label>
-          </div>
-          <div>
-            <label>Round</label>
-            <div class="row" style="gap:8px">
-              <button id="prevRound">◀</button>
-              <input id="roundInput" type="number" min="1" value="1" />
-              <button id="nextRound">▶</button>
-            </div>
-          </div>
-          <div>
-            <label>Timer (sec)</label>
-            <input id="timerInput" type="number" min="0" value="45" />
-          </div>
-          <div>
-            <label>Controls</label>
-            <div class="row" style="gap:8px">
-              <button id="startRound" class="primary">Start</button>
-              <button id="lockAll" class="warn">Lock</button>
-              <button id="resetRound" class="ghost">Reset</button>
-            </div>
-          </div>
-          <div>
-            <label>Reveal Answer</label>
-            <div class="row" style="gap:8px">
-              <select id="revealSelect">
-                <option value="">—</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="D">D</option>
-              </select>
-              <button id="revealBtn" class="danger">Reveal</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="footerNote">Room: <b id="roomLabel">(not set)</b> · Total teams joined: <b id="teamCount">0</b></div>
-
-        <div id="teamsGrid" class="grid cols-2" style="margin-top:12px"></div>
-      </div>
-    </section>
   </div>
-
-  <p class="footerNote">Tip: Open this page twice — one instance as <b>Host</b> on the projector, and seven phones as <b>Teams</b>. All devices must join the same <b>Room Code</b>.</p>
 </div>
-
-<!-- Firebase (client-side) -->
-<script type="module">
-  /* === FIREBASE SETUP ===
-     Create a Firebase project → Realtime Database (in test mode for quick start).
-     Add a Web App and paste your config below. Enable anonymous auth (or none; we store no PII).
-  */
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+<script>
+  const roomEl=document.getElementById('roomInput');
+  const teamEl=document.getElementById('teamInput');
+  const open=(path)=>{
+    const room=(roomEl.value||'').trim(); if(!room){ alert('Enter a room code.'); return; }
+    const url= new URL(path, location.origin + location.pathname.replace(/[^\/]*$/,''));
+    url.searchParams.set('room', room);
+    // stash team for team.html to pick up from localStorage
+    const team=(teamEl.value||'').trim(); if(team){ try{ localStorage.setItem('mpd_team', team); }catch(e){} }
+    window.open(url.toString(), '_blank');
   };
-
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getDatabase, ref, onValue, set, update, get, child } 
-    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  // === STATE ===
-  const el = (id)=>document.getElementById(id);
-
-  let room = localStorage.getItem('mpd_room') || '';
-  let teamName = localStorage.getItem('mpd_team') || '';
-  let isHost = false;
-
-  // Inputs
-  const roomInput = el('roomInput');
-  const teamInput = el('teamInput');
-  const joinBtn = el('joinBtn');
-  const hostToggle = el('hostToggle');
-
-  // Team panel
-  const aInput = el('aInput');
-  const bInput = el('bInput');
-  const cInput = el('cInput');
-  const dInput = el('dInput');
-  const allocated = el('allocated');
-  const remaining = el('remaining');
-  const maxEvenBtn = el('maxEvenBtn');
-  const clearBtn = el('clearBtn');
-  const submitBtn = el('submitBtn');
-  const teamMsg = el('teamMsg');
-  const teamBalance = el('teamBalance');
-  const timeLeft = el('timeLeft');
-  const roundNum = el('roundNum');
-
-  // Host
-  const roundInput = el('roundInput');
-  const timerInput = el('timerInput');
-  const startRound = el('startRound');
-  const lockAll = el('lockAll');
-  const resetRound = el('resetRound');
-  const revealSelect = el('revealSelect');
-  const revealBtn = el('revealBtn');
-  const teamsGrid = el('teamsGrid');
-  const roomLabel = el('roomLabel');
-  const teamCount = el('teamCount');
-  // FIX: bind prev/next round buttons (were missing and caused a ReferenceError)
-  const prevRound = el('prevRound');
-  const nextRound = el('nextRound');
-
-  // Prefill inputs
-  roomInput.value = room;
-  teamInput.value = teamName;
-
-  // Utils
-  const moneyFromTokens = (t)=> `£${(t*1000).toLocaleString()}`;
-  const clamp = (n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
-
-  // Database paths
-  const roomPath = ()=>`rooms/${room}`;
-  const settingsRef = ()=> ref(db, roomPath()+`/settings`);
-  const roundRef = ()=> ref(db, roomPath()+`/round`);
-  const teamsRef  = ()=> ref(db, roomPath()+`/teams`);
-  const teamRef   = ()=> ref(db, roomPath()+`/teams/${encodeURIComponent(teamName)}`);
-
-  // Joining / switching room & team
-  async function joinRoom(){
-    room = roomInput.value.trim();
-    teamName = teamInput.value.trim();
-    if(!room){ alert('Enter a room code.'); return; }
-    if(!teamName){ alert('Enter a team name.'); return; }
-
-    localStorage.setItem('mpd_room', room);
-    localStorage.setItem('mpd_team', teamName);
-
-    roomLabel.textContent = room;
-
-    // Create initial structures if missing
-    await update(settingsRef(), { createdAt: Date.now() });
-    await update(teamRef(), {
-      name: teamName,
-      balanceTokens: 1000,     // 1000 tokens = £1,000,000
-      lastSeen: Date.now()
-    });
-  }
-
-  joinBtn.addEventListener('click', joinRoom);
-
-  // Host toggle
-  hostToggle.addEventListener('change', ()=>{
-    isHost = hostToggle.checked;
-  });
-
-  // ROUND FLOW
-  async function hostStart(){
-    if(!room) { alert('Set a room code first.'); return; }
-    const r = clamp(roundInput.value,1,999);
-    const dur = clamp(timerInput.value,0,999);
-
-    await update(roundRef(), {
-      number: r,
-      phase: 'active',      // 'idle' | 'active' | 'locked' | 'revealed'
-      startAt: Date.now(),
-      duration: dur,
-      correct: ''
-    });
-
-    // Clear team allocations for this round
-    const snapshot = await get(teamsRef());
-    if(snapshot.exists()){
-      const teams = snapshot.val();
-      const updates = {};
-      Object.keys(teams).forEach(t=>{
-        updates[`${roomPath()}/teams/${t}/allocations/${r}`] = { A:0,B:0,C:0,D:0, locked:false };
-      });
-      await update(ref(db), updates);
-    }
-  }
-
-  async function hostLock(){
-    if(!room){return}
-    const r = clamp(roundInput.value,1,999);
-    await update(roundRef(), { phase: 'locked' });
-    // Force any unlocked team allocations to their current values
-    const snapshot = await get(teamsRef());
-    if(snapshot.exists()){
-      const teams = snapshot.val();
-      const updates = {};
-      Object.keys(teams).forEach(t=>{
-        updates[`${roomPath()}/teams/${t}/allocations/${r}/locked`] = true;
-      });
-      await update(ref(db), updates);
-    }
-  }
-
-  async function hostReset(){
-    if(!room){return}
-    const r = clamp(roundInput.value,1,999);
-    await update(roundRef(), { phase: 'idle', correct: '' });
-    // Do not clear history; just idle.
-  }
-
-  async function hostReveal(){
-    if(!room){return}
-    const r = clamp(roundInput.value,1,999);
-    const correct = revealSelect.value;
-    if(!correct){ alert('Pick the correct option first.'); return; }
-
-    // Mark revealed
-    await update(roundRef(), { phase: 'revealed', correct });
-
-    // Adjust balances: remove tokens from wrong answers
-    const snapshot = await get(teamsRef());
-    if(snapshot.exists()){
-      const teams = snapshot.val();
-      const updates = {};
-      Object.keys(teams).forEach(t=>{
-        const team = teams[t];
-        const alloc = team.allocations && team.allocations[r];
-        if(!alloc) return;
-        const lost = ['A','B','C','D'].filter(x=>x!==correct).reduce((s,k)=>s+(Number(alloc[k])||0),0);
-        const next = clamp((team.balanceTokens||1000) - lost, 0, 1000000);
-        updates[`${roomPath()}/teams/${t}/balanceTokens`] = next;
-      });
-      await update(ref(db), updates);
-    }
-  }
-
-  startRound.addEventListener('click', ()=>{ if(isHost) hostStart(); });
-  lockAll.addEventListener('click', ()=>{ if(isHost) hostLock(); });
-  resetRound.addEventListener('click', ()=>{ if(isHost) hostReset(); });
-  revealBtn.addEventListener('click', ()=>{ if(isHost) hostReveal(); });
-  prevRound.addEventListener('click', ()=>{ roundInput.value = clamp(Number(roundInput.value)-1,1,999); });
-  nextRound.addEventListener('click', ()=>{ roundInput.value = clamp(Number(roundInput.value)+1,1,999); });
-
-  // TEAM ALLOCATION UI
-  function refreshAllocUI(){
-    const a = clamp(aInput.value,0,1000);
-    const b = clamp(bInput.value,0,1000);
-    const c = clamp(cInput.value,0,1000);
-    const d = clamp(dInput.value,0,1000);
-    const sum = a+b+c+d;
-    allocated.textContent = sum;
-    remaining.textContent = Math.max(0, 1000 - sum);
-  }
-  [aInput,bInput,cInput,dInput].forEach(inp=>{
-    inp.addEventListener('input', refreshAllocUI);
-  });
-
-  maxEvenBtn.addEventListener('click', ()=>{
-    const q = Math.floor(1000/4);
-    const r = 1000 - q*4; // remainder
-    aInput.value = q + (r>0?1:0);
-    bInput.value = q + (r>1?1:0);
-    cInput.value = q + (r>2?1:0);
-    dInput.value = q;
-    refreshAllocUI();
-  });
-  clearBtn.addEventListener('click', ()=>{
-    aInput.value = bInput.value = cInput.value = dInput.value = 0;
-    refreshAllocUI();
-  });
-
-  async function submitAllocation(){
-    if(!room || !teamName){ alert('Join a room and choose a team name first.'); return; }
-    const rSnap = await get(roundRef());
-    const rVal = rSnap.val() || {};
-    const r = rVal.number || clamp(roundInput.value,1,999);
-
-    if(rVal.phase !== 'active'){ teamMsg.textContent = 'You can only submit while the round is active.'; return; }
-
-    const a = clamp(aInput.value,0,1000);
-    const b = clamp(bInput.value,0,1000);
-    const c = clamp(cInput.value,0,1000);
-    const d = clamp(dInput.value,0,1000);
-    const sum = a+b+c+d;
-    if(sum>1000){ alert('You allocated more than 1000 tokens.'); return; }
-
-    await update(ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}/allocations/${r}`), {
-      A:a, B:b, C:c, D:d, locked:false, at: Date.now()
-    });
-    teamMsg.textContent = 'Allocation saved.';
-  }
-  submitBtn.addEventListener('click', submitAllocation);
-
-  // LIVE BINDINGS
-  function renderTeams(teams, roundState){
-    const r = roundState.number || 1;
-    const correct = roundState.correct || '';
-
-    const names = Object.keys(teams||{}).sort();
-    teamCount.textContent = names.length;
-
-    teamsGrid.innerHTML = names.map(name=>{
-      const t = teams[name];
-      const alloc = (t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0, locked:false};
-      const total = (Number(alloc.A)||0)+(Number(alloc.B)||0)+(Number(alloc.C)||0)+(Number(alloc.D)||0);
-      const bal = t.balanceTokens==null?1000:t.balanceTokens;
-      const pct = (x)=> total>0? Math.round((x/Math.max(total,1))*100):0;
-
-      const dropClass = (opt)=> (roundState.phase==='revealed' && correct && opt!==correct)? ' drop':'';
-      const barCls = (opt)=> {
-        if(roundState.phase==='revealed' && correct){
-          return opt===correct? 'bar good' : 'bar bad';
-        }
-        return 'bar';
-      };
-
-      return `
-        <div class="card teamCard">
-          <div class="pad">
-            <div class="row" style="justify-content:space-between; align-items:baseline">
-              <h4>${escapeHtml(t.name||name)}</h4>
-              <div class="pill money">Balance: ${moneyFromTokens(bal)}</div>
-            </div>
-            <div class="stack">
-              ${renderBar('A', alloc.A, pct(alloc.A), barCls('A'))}
-              ${renderBar('B', alloc.B, pct(alloc.B), barCls('B'))}
-              ${renderBar('C', alloc.C, pct(alloc.C), barCls('C'))}
-              ${renderBar('D', alloc.D, pct(alloc.D), barCls('D'))}
-            </div>
-            <div class="tray">
-              <div class="cell${dropClass('A')}">A: ${alloc.A}</div>
-              <div class="cell${dropClass('B')}">B: ${alloc.B}</div>
-              <div class="cell${dropClass('C')}">C: ${alloc.C}</div>
-              <div class="cell${dropClass('D')}">D: ${alloc.D}</div>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  function renderBar(label, tokens, pct, cls){
-    return `
-      <div class="barRow">
-        <div>${label}</div>
-        <div class="${cls}"><span style="width:${pct}%"></span></div>
-        <div class="money">${moneyFromTokens(tokens)}</div>
-      </div>`
-  }
-
-  function escapeHtml(s){
-    return (s||'').toString().replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
-  }
-
-  // Subscribe to room state
-  function subscribe(){
-    if(!room) return;
-
-    onValue(roundRef(), snap=>{
-      const v = snap.val() || { number:1, phase:'idle', duration:45, startAt:0, correct:'' };
-
-      // Update team panel indicators
-      roundNum.textContent = v.number || 1;
-      roundInput.value = v.number || 1;
-
-      // Timer display on team panel
-      if(v.phase==='active' && v.duration>0 && v.startAt){
-        const tick = ()=>{
-          const now = Date.now();
-          const remainingMs = Math.max(0, (v.startAt + v.duration*1000) - now);
-          const sec = Math.ceil(remainingMs/1000);
-          timeLeft.textContent = `${sec}s`;
-          if(sec>0) requestAnimationFrame(tick); else timeLeft.textContent = '0s';
-        };
-        tick();
-      } else {
-        timeLeft.textContent = '—';
-      }
-
-      // Team panel messaging
-      const phases = { idle:'Waiting for the host to start…', active:'Round active – allocate & lock in!', locked:'Locked – awaiting reveal…', revealed: v.correct?`Revealed: ${v.correct}`:'Revealed' };
-      teamMsg.textContent = phases[v.phase] || '—';
-
-      // Lock/disable inputs if not active
-      const disabled = v.phase!=='active';
-      [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = disabled);
-
-      // On reveal, clear local inputs (just visual hygiene)
-      if(v.phase==='revealed'){
-        // keep values so teams can see what they placed; do not auto-clear
-      }
-
-      // Render teams when round updates too (for bar color state)
-      get(teamsRef()).then(s=> renderTeams(s.val()||{}, v));
-    });
-
-    onValue(teamsRef(), snap=>{
-      const teams = snap.val() || {};
-      get(roundRef()).then(rSnap=>{
-        renderTeams(teams, rSnap.val()||{number:1,phase:'idle'});
-      });
-    });
-  }
-
-  // Initial
-  refreshAllocUI();
-  if(room){ roomLabel.textContent = room; subscribe(); }
-
-  // Auto-join stored room/team silently on load
-  if(room && teamName){
-    // Touch presence
-    update(teamRef(), { lastSeen: Date.now() });
-  }
-
+  document.getElementById('openHost').onclick=()=>open('host.html');
+  document.getElementById('openTeam').onclick=()=>open('team.html');
+  document.getElementById('openSpectator').onclick=()=>open('spectator.html');
 </script>
 </body>
 </html>
-
