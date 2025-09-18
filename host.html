@@ -98,36 +98,37 @@
 </div>
 
 <script type="module">
-  // === FIREBASE CONFIG — REPLACE WITH YOURS ===
-  
- const firebaseConfig = {
+  // === FIREBASE CONFIG — YOUR REAL VALUES (kept) ===
+  const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
     databaseURL: "https://million-pound-drop-a1acc-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "million-pound-drop-a1acc",
-    storageBucket: "million-pound-drop-a1acc.firebasestorage.app",
+    storageBucket: "million-pound-drop-a1acc.firebasestorage.app", // ok; bucket isn't used for RTDB
     messagingSenderId: "866523395054",
     appId: "1:866523395054:web:dbbcd7c1b281cac32994ff",
     measurementId: "G-6VRXQSGG4H"
   };
-  
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
-  
-  const app = initializeApp(firebaseConfig);
+
+  // Namespace imports
+  import * as FBApp from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import * as FBDB  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+  // Init (prefix with FBApp/FBDB)
+  const app = FBApp.initializeApp(firebaseConfig);
   let db;
   try {
-    if(!firebaseConfig.databaseURL) throw new Error('Missing databaseURL');
-    db = getDatabase(app);
+    if (!firebaseConfig.databaseURL) throw new Error('Missing databaseURL');
+    db = FBDB.getDatabase(app);
   } catch (e) {
     alert('Realtime Database not available: ' + e.message);
   }
 
-  
-  const el = id=>document.getElementById(id);
+  // --- Helpers ---
+  const el = id => document.getElementById(id);
   const clamp = (n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
-  const moneyFromTokens = t=>`£${(t*1000).toLocaleString()}`;
-  const escapeHtml = s => (s||'').toString().replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
+  const moneyFromTokens = t => `£${(t*1000).toLocaleString()}`;
+  const escapeHtml = s => (s||'').toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
 
   let room = new URLSearchParams(location.search).get('room') || localStorage.getItem('mpd_room') || '';
 
@@ -148,17 +149,19 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 
   roomInput.value = room;
 
-  const roomPath = ()=>`rooms/${room}`;
-  const settingsRef = ()=> ref(db, roomPath()+`/settings`);
-  const roundRef = ()=> ref(db, roomPath()+`/round`);
-  const teamsRef  = ()=> ref(db, roomPath()+`/teams`);
+  // Realtime Database refs (prefix with FBDB)
+  const roomPath   = () => `rooms/${room}`;
+  const settingsRef= () => FBDB.ref(db, roomPath()+`/settings`);
+  const roundRef   = () => FBDB.ref(db, roomPath()+`/round`);
+  const teamsRef   = () => FBDB.ref(db, roomPath()+`/teams`);
 
+  // Join/Create room
   async function joinRoom(){
     room = roomInput.value.trim();
     if(!room){ alert('Enter a room code'); return; }
     localStorage.setItem('mpd_room', room);
     roomLabel.textContent = room;
-    await update(settingsRef(), { createdAt: Date.now() });
+    await FBDB.update(settingsRef(), { createdAt: Date.now() });
     subscribe();
   }
   joinBtn.addEventListener('click', joinRoom);
@@ -166,34 +169,47 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
   prevRound.addEventListener('click', ()=>{ roundInput.value = clamp(Number(roundInput.value)-1,1,999); });
   nextRound.addEventListener('click', ()=>{ roundInput.value = clamp(Number(roundInput.value)+1,1,999); });
 
+  // Host actions
   async function hostStart(){
     if(!room){ alert('Set a room code first.'); return; }
     const r = clamp(roundInput.value,1,999);
     const dur = clamp(timerInput.value,0,999);
-    await update(roundRef(), { number:r, phase:'active', startAt: Date.now(), duration:dur, correct:'' });
-    const snapshot = await get(teamsRef());
+
+    await FBDB.update(roundRef(), { number:r, phase:'active', startAt: Date.now(), duration:dur, correct:'' });
+
+    const snapshot = await FBDB.get(teamsRef());
     if(snapshot.exists()){
       const teams = snapshot.val();
       const updates = {};
-      Object.keys(teams).forEach(t=>{ updates[`${roomPath()}/teams/${t}/allocations/${r}`] = {A:0,B:0,C:0,D:0,locked:false}; });
-      await update(ref(db), updates);
+      Object.keys(teams).forEach(t=>{
+        updates[`${roomPath()}/teams/${t}/allocations/${r}`] = {A:0,B:0,C:0,D:0,locked:false};
+      });
+      await FBDB.update(FBDB.ref(db), updates);
     }
   }
-  async function hostLock(){ if(!room) return; await update(roundRef(), { phase:'locked' }); }
-  async function hostReset(){ if(!room) return; await update(roundRef(), { phase:'idle', correct:'' }); }
+  async function hostLock(){ if(!room) return; await FBDB.update(roundRef(), { phase:'locked' }); }
+  async function hostReset(){ if(!room) return; await FBDB.update(roundRef(), { phase:'idle', correct:'' }); }
   async function hostReveal(){
-    if(!room) return; const r = clamp(roundInput.value,1,999); const correct = revealSelect.value; if(!correct){ alert('Pick the correct option.'); return; }
-    await update(roundRef(), { phase:'revealed', correct });
-    const snapshot = await get(teamsRef());
+    if(!room) return;
+    const r = clamp(roundInput.value,1,999);
+    const correct = revealSelect.value;
+    if(!correct){ alert('Pick the correct option.'); return; }
+
+    await FBDB.update(roundRef(), { phase:'revealed', correct });
+
+    const snapshot = await FBDB.get(teamsRef());
     if(snapshot.exists()){
-      const teams = snapshot.val(); const updates = {};
+      const teams = snapshot.val();
+      const updates = {};
       Object.keys(teams).forEach(t=>{
-        const team = teams[t]; const alloc = team.allocations && team.allocations[r]; if(!alloc) return;
+        const team = teams[t];
+        const alloc = team.allocations && team.allocations[r];
+        if(!alloc) return;
         const lost = ['A','B','C','D'].filter(x=>x!==correct).reduce((s,k)=>s+(Number(alloc[k])||0),0);
         const next = Math.max(0,(team.balanceTokens||1000)-lost);
         updates[`${roomPath()}/teams/${t}/balanceTokens`] = next;
       });
-      await update(ref(db), updates);
+      await FBDB.update(FBDB.ref(db), updates);
     }
   }
 
@@ -209,7 +225,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
     const r = roundState.number || 1; const correct = roundState.correct || '';
     const names = Object.keys(teams||{}).sort();
     return names.map(name=>{
-      const t = teams[name]; const alloc = (t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0,locked:false};
+      const t = teams[name];
+      const alloc = (t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0,locked:false};
       const total = (Number(alloc.A)||0)+(Number(alloc.B)||0)+(Number(alloc.C)||0)+(Number(alloc.D)||0);
       const bal = t.balanceTokens==null?1000:t.balanceTokens;
       const pct = x => total>0 ? Math.round((x/Math.max(total,1))*100) : 0;
@@ -234,20 +251,30 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebas
 
   function subscribe(){
     if(!room || !db) return;
-    onValue(roundRef(), snap=>{
+    FBDB.onValue(roundRef(), snap=>{
       const v = snap.val() || { number:1, phase:'idle', duration:45, startAt:0, correct:'' };
       roundInput.value = v.number || 1;
       roomLabel.textContent = room;
-      // Render with current teams too for colours
-      get(teamsRef()).then(s=>{ teamsGrid.innerHTML = renderTeamsHtml(s.val()||{}, v); teamCount.textContent = Object.keys(s.val()||{}).length; });
+      // Render with current teams for colours
+      FBDB.get(teamsRef()).then(s=>{
+        const teams = s.val() || {};
+        teamsGrid.innerHTML = renderTeamsHtml(teams, v);
+        teamCount.textContent = Object.keys(teams).length;
+      });
     });
-    onValue(teamsRef(), snap=>{
-      const teams = snap.val() || {}; teamCount.textContent = Object.keys(teams).length;
-      get(roundRef()).then(rSnap=>{ teamsGrid.innerHTML = renderTeamsHtml(teams, rSnap.val()||{number:1,phase:'idle'}); });
+    FBDB.onValue(teamsRef(), snap=>{
+      const teams = snap.val() || {};
+      teamCount.textContent = Object.keys(teams).length;
+      FBDB.get(roundRef()).then(rSnap=>{
+        teamsGrid.innerHTML = renderTeamsHtml(teams, rSnap.val()||{number:1,phase:'idle'});
+      });
     });
   }
 
-  if(room){ roomLabel.textContent = room; }
+  // If room came via ?room=… start listening immediately
+  if(room){
+    roomLabel.textContent = room;
+    subscribe();
+  }
 </script>
-</body>
-</html>
+
