@@ -90,7 +90,6 @@
 </div>
 
 <script type="module">
-  // === YOUR REAL FIREBASE CONFIG (kept) ===
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -102,25 +101,17 @@
     measurementId: "G-6VRXQSGG4H"
   };
 
-  // Use the same CDN version as host.html for consistency
   import * as FBApp from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import * as FBDB  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
   const app = FBApp.initializeApp(firebaseConfig);
-  let db;
-  try {
-    if (!firebaseConfig.databaseURL) throw new Error('Missing databaseURL');
-    db = FBDB.getDatabase(app);
-  } catch (e) {
-    alert('Realtime Database not available: ' + e.message);
-  }
+  const db  = FBDB.getDatabase(app);
 
-  // --- Helpers / elements ---
   const el=id=>document.getElementById(id);
+  const money=n=>'£'+Number(n||0).toLocaleString();
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
-  const moneyFromTokens=t=>`£${(t*1000).toLocaleString()}`;
 
-  let room = new URLSearchParams(location.search).get('room') || localStorage.getItem('mpd_room') || '';
+  let room = new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
   let teamName = localStorage.getItem('mpd_team') || '';
 
   const roomInput=el('roomInput'), teamInput=el('teamInput'), joinBtn=el('joinBtn');
@@ -129,101 +120,102 @@
   const maxEvenBtn=el('maxEvenBtn'), clearBtn=el('clearBtn'), submitBtn=el('submitBtn');
   const teamMsg=el('teamMsg'), teamBalance=el('teamBalance'), timeLeft=el('timeLeft'), roundNum=el('roundNum');
 
-  roomInput.value = room; teamInput.value = teamName;
+  // Minor UI: hide timer/round label meaning (we’ll repurpose text)
+  roundNum.textContent = '—';
+  timeLeft.textContent = '—';
 
-  // DB refs (prefixed)
+  roomInput.value=room; teamInput.value=teamName;
+
   const roomPath = ()=>`rooms/${room}`;
-  const roundRef = ()=> FBDB.ref(db, roomPath()+`/round`);
-  const teamsRef = ()=> FBDB.ref(db, roomPath()+`/teams`);
-  const teamRef  = ()=> FBDB.ref(db, roomPath()+`/teams/${encodeURIComponent(teamName)}`);
+  const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
+  const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
+  const teamRef   =()=> FBDB.ref(db, roomPath()+`/teams/${encodeURIComponent(teamName)}`);
 
-  // UI helpers
+  let currentBalance = 1000000;
+
   function refreshAllocUI(){
-    const a=clamp(aInput.value,0,1000),
-          b=clamp(bInput.value,0,1000),
-          c=clamp(cInput.value,0,1000),
-          d=clamp(dInput.value,0,1000);
+    const a=clamp(aInput.value,0,Infinity),
+          b=clamp(bInput.value,0,Infinity),
+          c=clamp(cInput.value,0,Infinity),
+          d=clamp(dInput.value,0,Infinity);
     const sum=a+b+c+d;
-    allocated.textContent=sum;
-    remaining.textContent=Math.max(0,1000-sum);
+    allocated.textContent = sum.toLocaleString();
+    remaining.textContent = Math.max(0, currentBalance - sum).toLocaleString();
   }
-  [aInput,bInput,cInput,dInput].forEach(i=> i.addEventListener('input',refreshAllocUI));
-  maxEvenBtn.addEventListener('click',()=>{
-    const q=Math.floor(1000/4), r=1000-q*4;
-    aInput.value=q+(r>0?1:0); bInput.value=q+(r>1?1:0); cInput.value=q+(r>2?1:0); dInput.value=q;
+  [aInput,bInput,cInput,dInput].forEach(i=> i.addEventListener('input', refreshAllocUI));
+
+  maxEvenBtn.addEventListener('click', ()=>{
+    const q = Math.floor(currentBalance/4), r = currentBalance - q*4;
+    aInput.value = q + (r>0?1:0);
+    bInput.value = q + (r>1?1:0);
+    cInput.value = q + (r>2?1:0);
+    dInput.value = q;
     refreshAllocUI();
   });
-  clearBtn.addEventListener('click',()=>{ aInput.value=bInput.value=cInput.value=dInput.value=0; refreshAllocUI(); });
+  clearBtn.addEventListener('click', ()=>{ aInput.value=bInput.value=cInput.value=dInput.value=0; refreshAllocUI(); });
 
-  // Join / create team in room
   async function joinRoom(){
     room = roomInput.value.trim();
     teamName = teamInput.value.trim();
     if(!room){ alert('Enter a room code'); return; }
     if(!teamName){ alert('Enter a team name'); return; }
-
     localStorage.setItem('mpd_room', room);
     localStorage.setItem('mpd_team', teamName);
 
-    await FBDB.update(FBDB.ref(db, roomPath()+`/settings`), { createdAt: Date.now() });
-    await FBDB.update(teamRef(), { name: teamName, balanceTokens: 1000, lastSeen: Date.now() });
+    // Make sure room exists and team exists with a starting balance (only if missing)
+    await FBDB.update(settingsRef(), { createdAt: Date.now() });
+    const tSnap = await FBDB.get(teamRef());
+    if(!tSnap.exists() || tSnap.val().balance==null){
+      await FBDB.update(teamRef(), { name: teamName, balance: 1000000, lastSeen: Date.now(), alloc: {A:0,B:0,C:0,D:0} });
+    } else {
+      await FBDB.update(teamRef(), { name: teamName, lastSeen: Date.now() });
+    }
     subscribe();
   }
   joinBtn.addEventListener('click', joinRoom);
 
-  // Submit allocation
   async function submitAllocation(){
     if(!room||!teamName){ alert('Join a room and set a team name first.'); return; }
-    const rSnap = await FBDB.get(roundRef());
-    const v = rSnap.val() || {};
-    const r = v.number || 1;
-    if(v.phase!=='active'){ teamMsg.textContent='You can only submit while the round is active.'; return; }
-    const a=clamp(aInput.value,0,1000),
-          b=clamp(bInput.value,0,1000),
-          c=clamp(cInput.value,0,1000),
-          d=clamp(dInput.value,0,1000);
-    const sum=a+b+c+d;
-    if(sum>1000){ alert('More than 1000 tokens.'); return; }
+    const setSnap = await FBDB.get(settingsRef());
+    const settings = setSnap.val() || {};
+    if(settings.phase !== 'active'){ teamMsg.textContent = 'Allocations are closed.'; return; }
 
-    await FBDB.update(FBDB.ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}/allocations/${r}`),
-      {A:a,B:b,C:c,D:d,locked:false,at:Date.now()});
-    teamMsg.textContent='Allocation saved.';
+    const a=clamp(aInput.value,0,Infinity),
+          b=clamp(bInput.value,0,Infinity),
+          c=clamp(cInput.value,0,Infinity),
+          d=clamp(dInput.value,0,Infinity);
+    const sum = a+b+c+d;
+    if(sum > currentBalance){ alert('You cannot allocate more than your current balance.'); return; }
+
+    await FBDB.update(FBDB.ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}`), {
+      alloc: {A:a,B:b,C:c,D:d},
+      lastSeen: Date.now()
+    });
+    teamMsg.textContent = 'Allocation saved.';
   }
   submitBtn.addEventListener('click', submitAllocation);
 
-  // Live bindings
   function subscribe(){
-    if(!room||!db) return;
+    if(!room) return;
 
-    FBDB.onValue(roundRef(), snap=>{
-      const v=snap.val()||{number:1,phase:'idle',duration:45,startAt:0,correct:''};
-      roundNum.textContent=v.number||1;
-
-      if(v.phase==='active'&&v.duration>0&&v.startAt){
-        const tick=()=>{
-          const now=Date.now();
-          const remainingMs=Math.max(0,(v.startAt+v.duration*1000)-now);
-          const sec=Math.ceil(remainingMs/1000);
-          timeLeft.textContent=`${sec}s`;
-          if(sec>0) requestAnimationFrame(tick); else timeLeft.textContent='0s';
-        };
-        tick();
-      } else {
-        timeLeft.textContent='—';
-      }
-
-      const phases={idle:'Waiting for the host to start…',active:'Round active – allocate & lock in!',locked:'Locked – awaiting reveal…',revealed:v.correct?`Revealed: ${v.correct}`:'Revealed'};
-      teamMsg.textContent=phases[v.phase]||'—';
-
-      const disabled = v.phase!=='active';
-      [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled=disabled);
+    // Settings: use phase to enable/disable inputs
+    FBDB.onValue(settingsRef(), s=>{
+      const v = s.val() || {phase:'active'};
+      const disabled = v.phase !== 'active';
+      [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = disabled);
+      const phaseMsg = {active:'Allocations open – choose your split!', locked:'Locked – waiting for reveal…', revealed: v.correct?`Revealed: ${v.correct}`:'Revealed', undefined:'—'};
+      teamMsg.textContent = phaseMsg[v.phase] || '—';
     });
 
-    FBDB.onValue(teamsRef(), snap=>{
-      const teams=snap.val()||{};
-      const key=encodeURIComponent(teamName);
-      const me = teams[key] || Object.values(teams).find(t=>t.name===teamName) || {balanceTokens:1000};
-      teamBalance.textContent = moneyFromTokens(me.balanceTokens!=null?me.balanceTokens:1000);
+    // Your team
+    FBDB.onValue(teamRef(), tSnap=>{
+      const t = tSnap.val() || {};
+      currentBalance = Number(t.balance != null ? t.balance : 1000000);
+      teamBalance.textContent = money(currentBalance);
+      // Clear inputs if server cleared alloc after reveal
+      const alloc = t.alloc || {A:0,B:0,C:0,D:0};
+      aInput.value = alloc.A||0; bInput.value = alloc.B||0; cInput.value = alloc.C||0; dInput.value = alloc.D||0;
+      refreshAllocUI();
     });
   }
 
