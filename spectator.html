@@ -74,7 +74,6 @@
 </div>
 
 <script type="module">
-  // === YOUR REAL FIREBASE CONFIG (kept) ===
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -86,95 +85,77 @@
     measurementId: "G-6VRXQSGG4H"
   };
 
-  // Use same version as host/team
   import * as FBApp from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import * as FBDB  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
   const app = FBApp.initializeApp(firebaseConfig);
-  let db;
-  try {
-    if (!firebaseConfig.databaseURL) throw new Error('Missing databaseURL');
-    db = FBDB.getDatabase(app);
-  } catch (e) {
-    alert('Realtime Database not available: ' + e.message);
-  }
+  const db  = FBDB.getDatabase(app);
 
-  // --- Elements / helpers ---
-  const el = id => document.getElementById(id);
-  const moneyFromTokens = t => `£${(t*1000).toLocaleString()}`;
+  const el=id=>document.getElementById(id);
+  const money=n=>'£'+Number(n||0).toLocaleString();
 
-  let room = new URLSearchParams(location.search).get('room') || localStorage.getItem('mpd_room') || '';
+  let room = new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
+  const roomInput=el('roomInput'), joinBtn=el('joinBtn');
+  const spectatorGrid=el('spectatorGrid');
+  const specRoom=el('specRoom'), specTeamCount=el('specTeamCount'), specRound=el('specRound'), specPhase=el('specPhase'), specCorrect=el('specCorrect');
 
-  const roomInput = el('roomInput');
-  const joinBtn = el('joinBtn');
-  const spectatorGrid = el('spectatorGrid');
-  const specRoom = el('specRoom');
-  const specTeamCount = el('specTeamCount');
-  const specRound = el('specRound');
-  const specPhase = el('specPhase');
-  const specCorrect = el('specCorrect');
+  roomInput.value = room; if(room) specRoom.textContent = room;
 
-  roomInput.value = room; if (room) specRoom.textContent = room;
+  const roomPath = ()=>`rooms/${room}`;
+  const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
+  const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
 
-  // DB refs
-  const roomPath  = () => `rooms/${room}`;
-  const roundRef  = () => FBDB.ref(db, roomPath()+`/round`);
-  const teamsRef  = () => FBDB.ref(db, roomPath()+`/teams`);
-
-  // Render helpers
   function teamBars(label, tokens, pct, cls){
-    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${moneyFromTokens(tokens)}</div></div>`;
+    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${money(tokens)}</div></div>`;
   }
-  function renderTeamsHtml(teams, roundState){
-    const r = roundState.number || 1; const correct = roundState.correct || '';
+  function renderTeamsHtml(teams, settings){
     const names = Object.keys(teams||{}).sort();
+    const correct = settings.correct || '';
     return names.map(name=>{
-      const t = teams[name];
-      const alloc = (t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0,locked:false};
-      const total = (Number(alloc.A)||0)+(Number(alloc.B)||0)+(Number(alloc.C)||0)+(Number(alloc.D)||0);
-      const bal = t.balanceTokens==null?1000:t.balanceTokens;
-      const pct = x => total>0 ? Math.round((x/Math.max(total,1))*100) : 0;
-      const dropClass = opt => (roundState.phase==='revealed' && correct && opt!==correct)? ' drop':'';
-      const barCls = opt => (roundState.phase==='revealed' && correct) ? (opt===correct?'bar good':'bar bad') : 'bar';
+      const t = teams[name] || {};
+      const alloc = t.alloc || {A:0,B:0,C:0,D:0};
+      const total = Number(alloc.A||0)+Number(alloc.B||0)+Number(alloc.C||0)+Number(alloc.D||0);
+      const pct = x => total>0 ? Math.round((Number(x)/Math.max(total,1))*100) : 0;
+      const bal = Number(t.balance != null ? t.balance : 1000000);
+      const dropClass = opt => (settings.phase==='revealed' && correct && opt!==correct)? ' drop':'';
+      const barCls = opt => (settings.phase==='revealed' && correct) ? (opt===correct?'bar good':'bar bad') : 'bar';
+
       return `
-        <div class="card"><div class="pad">
-          <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${moneyFromTokens(bal)}</div></div>
-          ${teamBars('A', alloc.A, pct(alloc.A), barCls('A'))}
-          ${teamBars('B', alloc.B, pct(alloc.B), barCls('B'))}
-          ${teamBars('C', alloc.C, pct(alloc.C), barCls('C'))}
-          ${teamBars('D', alloc.D, pct(alloc.D), barCls('D'))}
-          <div class="tray" style="margin-top:8px">
-            <div class="cell${dropClass('A')}">A: ${alloc.A}</div>
-            <div class="cell${dropClass('B')}">B: ${alloc.B}</div>
-            <div class="cell${dropClass('C')}">C: ${alloc.C}</div>
-            <div class="cell${dropClass('D')}">D: ${alloc.D}</div>
-          </div>
-        </div></div>`;
+      <div class="card"><div class="pad">
+        <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${money(bal)}</div></div>
+        ${teamBars('A', alloc.A||0, pct(alloc.A||0), barCls('A'))}
+        ${teamBars('B', alloc.B||0, pct(alloc.B||0), barCls('B'))}
+        ${teamBars('C', alloc.C||0, pct(alloc.C||0), barCls('C'))}
+        ${teamBars('D', alloc.D||0, pct(alloc.D||0), barCls('D'))}
+        <div class="tray" style="margin-top:8px">
+          <div class="cell${dropClass('A')}">A: ${alloc.A||0}</div>
+          <div class="cell${dropClass('B')}">B: ${alloc.B||0}</div>
+          <div class="cell${dropClass('C')}">C: ${alloc.C||0}</div>
+          <div class="cell${dropClass('D')}">D: ${alloc.D||0}</div>
+        </div>
+      </div></div>`;
     }).join('');
   }
 
-  // Subscribe/read-only
   function subscribe(){
-    if(!room || !db) return;
-
-    FBDB.onValue(roundRef(), snap=>{
-      const v = snap.val() || { number:1, phase:'idle', duration:45, startAt:0, correct:'' };
-      specRound.textContent = v.number || '—';
-      specPhase.textContent = v.phase  || '—';
+    if(!room) return;
+    FBDB.onValue(settingsRef(), s=>{
+      const v = s.val() || {phase:'active', correct:''};
+      specRoom.textContent = room;
+      specRound.textContent = '—';
+      specPhase.textContent = v.phase || '—';
       specCorrect.textContent = v.correct || '—';
-      FBDB.get(teamsRef()).then(s=>{
-        const teams = s.val() || {};
+      FBDB.get(teamsRef()).then(ts=>{
+        const teams = ts.val() || {};
         specTeamCount.textContent = Object.keys(teams).length;
         spectatorGrid.innerHTML = renderTeamsHtml(teams, v);
       });
     });
-
-    FBDB.onValue(teamsRef(), snap=>{
-      const teams = snap.val() || {};
+    FBDB.onValue(teamsRef(), ts=>{
+      const teams = ts.val() || {};
       specTeamCount.textContent = Object.keys(teams).length;
-      FBDB.get(roundRef()).then(rSnap=>{
-        const v = rSnap.val() || { number:1, phase:'idle', correct:'' };
-        spectatorGrid.innerHTML = renderTeamsHtml(teams, v);
+      FBDB.get(settingsRef()).then(s=>{
+        spectatorGrid.innerHTML = renderTeamsHtml(teams, s.val() || {phase:'active', correct:''});
       });
     });
   }
@@ -190,5 +171,6 @@
 
   if(room){ subscribe(); }
 </script>
+
 </body>
 </html>
