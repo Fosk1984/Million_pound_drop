@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Million Pound Drop – Spectator</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
+  <style>
+    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--ink:#e6ecff}
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
+    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px 80px}
+    header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+    .title{font-weight:800;letter-spacing:.3px}.muted{color:var(--muted)}
+    .grid{display:grid;gap:16px}
+    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(max-width:1024px){.grid.cols-2{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg,#16214a 0,#0f1740 100%);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
+    .card .pad{padding:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    input,button{background:#0e1637;border:1px solid rgba(255,255,255,.12);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:15px}
+    button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%)}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
+    .barRow{display:grid;grid-template-columns:40px 1fr 80px;align-items:center;gap:10px}
+    .bar{height:18px;background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
+    .bar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.2),rgba(94,234,212,.8));transition:width .5s ease}
+    .bar.bad>span{background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(239,68,68,.9))}
+    .bar.good>span{background:linear-gradient(90deg,rgba(34,197,94,.25),rgba(34,197,94,.9))}
+    .tray{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+    .tray .cell{background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;text-align:center}
+    .cell.drop{animation:drop 900ms ease forwards}
+    @keyframes drop{0%{transform:translateY(0);opacity:1}80%{transform:translateY(32px);opacity:.6}100%{transform:translateY(80px);opacity:0}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="title" style="font-size:28px">Million Pound Drop – Spectator</div>
+      <div class="muted">Read-only live board for the audience.</div>
+    </div>
+    <div class="row" style="max-width:700px">
+      <input id="roomInput" placeholder="Room code (e.g. KEELE-2025)" />
+      <button id="joinBtn">Join Room</button>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="pad">
+      <div class="row" style="align-items:flex-end">
+        <div>
+          <div class="pill">Round</div>
+          <div class="title" id="specRound" style="font-size:24px">—</div>
+        </div>
+        <div>
+          <div class="pill">Phase</div>
+          <div class="title" id="specPhase" style="font-size:24px">—</div>
+        </div>
+        <div>
+          <div class="pill">Correct</div>
+          <div class="title" id="specCorrect" style="font-size:24px">—</div>
+        </div>
+      </div>
+      <div class="pill" style="margin-top:8px">Room: <b id="specRoom">(not set)</b> · Teams: <b id="specTeamCount">0</b></div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <div class="pad">
+      <h3 style="margin:0 0 8px">Teams</h3>
+      <div id="spectatorGrid" class="grid cols-2"></div>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+  // === FIREBASE CONFIG — REPLACE WITH YOURS ===
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getDatabase, ref, onValue, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+  const app = initializeApp(firebaseConfig);
+  let db; try{ if(!firebaseConfig.databaseURL) throw new Error('Missing databaseURL'); db = getDatabase(app); }catch(e){ alert('Realtime Database not available: '+e.message); }
+
+  const el=id=>document.getElementById(id);
+  const moneyFromTokens=t=>`£${(t*1000).toLocaleString()}`;
+
+  let room=new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
+  const roomInput=el('roomInput'); const joinBtn=el('joinBtn');
+  const spectatorGrid=el('spectatorGrid');
+  const specRoom=el('specRoom'); const specTeamCount=el('specTeamCount'); const specRound=el('specRound'); const specPhase=el('specPhase'); const specCorrect=el('specCorrect');
+
+  roomInput.value=room; if(room) specRoom.textContent=room;
+
+  const roomPath=()=>`rooms/${room}`;
+  const roundRef=()=>ref(db, roomPath()+`/round`);
+  const teamsRef=()=>ref(db, roomPath()+`/teams`);
+
+  function teamBars(label, tokens, pct, cls){
+    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${moneyFromTokens(tokens)}</div></div>`;
+  }
+  function renderTeamsHtml(teams, roundState){
+    const r = roundState.number || 1; const correct = roundState.correct || '';
+    const names = Object.keys(teams||{}).sort();
+    return names.map(name=>{
+      const t = teams[name]; const alloc = (t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0,locked:false};
+      const total = (Number(alloc.A)||0)+(Number(alloc.B)||0)+(Number(alloc.C)||0)+(Number(alloc.D)||0);
+      const bal = t.balanceTokens==null?1000:t.balanceTokens;
+      const pct = x => total>0 ? Math.round((x/Math.max(total,1))*100) : 0;
+      const dropClass = opt => (roundState.phase==='revealed' && correct && opt!==correct)? ' drop':'';
+      const barCls = opt => (roundState.phase==='revealed' && correct) ? (opt===correct?'bar good':'bar bad') : 'bar';
+      return `
+        <div class="card"><div class="pad">
+          <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${moneyFromTokens(bal)}</div></div>
+          ${teamBars('A', alloc.A, pct(alloc.A), barCls('A'))}
+          ${teamBars('B', alloc.B, pct(alloc.B), barCls('B'))}
+          ${teamBars('C', alloc.C, pct(alloc.C), barCls('C'))}
+          ${teamBars('D', alloc.D, pct(alloc.D), barCls('D'))}
+          <div class="tray" style="margin-top:8px">
+            <div class="cell${dropClass('A')}">A: ${alloc.A}</div>
+            <div class="cell${dropClass('B')}">B: ${alloc.B}</div>
+            <div class="cell${dropClass('C')}">C: ${alloc.C}</div>
+            <div class="cell${dropClass('D')}">D: ${alloc.D}</div>
+          </div>
+        </div></div>`;
+    }).join('');
+  }
+
+  async function joinRoom(){
+    room = roomInput.value.trim(); if(!room){ alert('Enter a room code'); return; }
+    localStorage.setItem('mpd_room', room); specRoom.textContent = room; subscribe();
+  }
+  joinBtn.addEventListener('click', joinRoom);
+
+  function subscribe(){
+    if(!room||!db) return;
+    onValue(roundRef(), snap=>{
+      const v=snap.val()||{number:1,phase:'idle',duration:45,startAt:0,correct:''};
+      specRound.textContent=v.number||'—'; specPhase.textContent=v.phase||'—'; specCorrect.textContent=v.correct||'—';
+      // Re-render with teams for colour state
+      import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js').then(()=>{
+        // no-op; ensure module cache warmed
+      });
+      import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+      // now fetch teams
+      onValue(teamsRef(), s=>{ const teams=s.val()||{}; specTeamCount.textContent=Object.keys(teams).length; spectatorGrid.innerHTML = renderTeamsHtml(teams, v); });
+    });
+  }
+
+  if(room){ subscribe(); }
+</script>
+</body>
+</html>
