@@ -24,7 +24,7 @@
     button.warn{background:linear-gradient(180deg,#ffd166 0,#f59e0b 100%);border:none;color:#261b00}
     button.danger{background:linear-gradient(180deg,#ff6672 0,#ef4444 100%);border:none}
     .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
-    .barRow{display:grid;grid-template-columns:40px 1fr 80px;align-items:center;gap:10px}
+    .barRow{display:grid;grid-template-columns:40px 1fr 110px;align-items:center;gap:10px}
     .bar{height:18px;background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
     .bar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.2),rgba(94,234,212,.8));transition:width .5s ease}
     .bar.bad>span{background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(239,68,68,.9))}
@@ -40,9 +40,9 @@
   <header>
     <div>
       <div class="title" style="font-size:28px">Million Pound Drop – Host</div>
-      <div class="muted">Project this view. Create a room and control rounds.</div>
+      <div class="muted">Project this view. Control allocations, timer, and reveals.</div>
     </div>
-    <div class="row" style="max-width:700px">
+    <div class="row" style="max-width:760px">
       <input id="roomInput" placeholder="Room code (e.g. KEELE-2025)" />
       <button id="joinBtn" class="primary">Create / Join Room</button>
     </div>
@@ -50,15 +50,7 @@
 
   <section class="card">
     <div class="pad">
-      <div class="row" style="align-items:flex-end">
-        <div>
-          <label>Round</label>
-          <div class="row" style="gap:8px">
-            <button id="prevRound">◀</button>
-            <input id="roundInput" type="number" min="1" value="1" />
-            <button id="nextRound">▶</button>
-          </div>
-        </div>
+      <div class="row" style="align-items:flex-end;gap:16px">
         <div>
           <label>Timer (sec)</label>
           <input id="timerInput" type="number" min="0" value="45" />
@@ -68,7 +60,7 @@
           <div class="row" style="gap:8px">
             <button id="startRound" class="primary">Start</button>
             <button id="lockAll" class="warn">Lock</button>
-            <button id="resetRound">Reset</button>
+            <button id="resetRound">Clear Allocations</button>
           </div>
         </div>
         <div>
@@ -98,7 +90,6 @@
 </div>
 
 <script type="module">
-  // --- Firebase config (yours) ---
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -116,7 +107,6 @@
   const app = FBApp.initializeApp(firebaseConfig);
   const db  = FBDB.getDatabase(app);
 
-  // --- Helpers & els ---
   const el = id=>document.getElementById(id);
   const money = n => '£'+Number(n||0).toLocaleString();
   const escapeHtml = s => (s||'').toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[c]));
@@ -126,18 +116,17 @@
   const roomLabel=el('roomLabel'), teamCount=el('teamCount');
   const teamsGrid=el('teamsGrid');
   const revealSelect=el('revealSelect');
-  const startBtn=el('startRound');   // repurposed: Open allocations
+  const startBtn=el('startRound');
   const lockBtn =el('lockAll');
-  const resetBtn=el('resetRound');   // clear all allocations
+  const clearBtn=el('resetRound');
+  const timerInput=el('timerInput');
 
   roomInput.value = room;
 
-  // DB refs
   const roomPath   = () => `rooms/${room}`;
   const settingsRef= () => FBDB.ref(db, roomPath()+`/settings`);
   const teamsRef   = () => FBDB.ref(db, roomPath()+`/teams`);
 
-  // Join/Create room
   async function joinRoom(){
     room = roomInput.value.trim();
     if(!room){ alert('Enter a room code'); return; }
@@ -148,104 +137,115 @@
   }
   joinBtn.addEventListener('click', joinRoom);
 
-  // Host actions
-async function openAlloc(){
-  if(!room) return;
-  const dur = Math.max(0, Number(timerInput.value) || 0);
-
-  const snap = await FBDB.get(teamsRef());
-  const teams = snap.val() || {};
-  const updates = {};
-  Object.keys(teams).forEach(k=>{
-    updates[`${roomPath()}/teams/${k}/alloc`]  = {A:0,B:0,C:0,D:0};
-    updates[`${roomPath()}/teams/${k}/locked`] = false; // reset locks
-  });
-
-  updates[`${roomPath()}/settings/phase`]   = 'active';
-  updates[`${roomPath()}/settings/correct`] = '';
-  updates[`${roomPath()}/settings/timer`]   = { startAt: Date.now(), duration: dur };
-
-  await FBDB.update(FBDB.ref(db), updates);
-}
-
-
- async function lockAlloc(){
-  if(!room) return;
-  await FBDB.update(FBDB.ref(db), {
-    [`${roomPath()}/settings/phase`]: 'locked',
-    [`${roomPath()}/settings/timer`]: { startAt: 0, duration: 0 }
-  });
-}
-
-async function reveal(){
-  if(!room) return;
-  const correct = revealSelect.value;
-  if(!correct){ alert('Pick the correct option.'); return; }
-
-  const snap = await FBDB.get(teamsRef());
-  const teams = snap.val() || {};
-  const updates = {};
-
-  Object.keys(teams).forEach(k=>{
-    const t = teams[k] || {};
-    const a = Number(t.alloc?.A) || 0;
-    const b = Number(t.alloc?.B) || 0;
-    const c = Number(t.alloc?.C) || 0;
-    const d = Number(t.alloc?.D) || 0;
-    const bal = Number(t.balance ?? 1000000);
-
-    const newBal = Math.max(0, bal - ((correct!=='A'?a:0) + (correct!=='B'?b:0) + (correct!=='C'?c:0) + (correct!=='D'?d:0)));
-    updates[`${roomPath()}/teams/${k}/balance`] = newBal;
-
-    // IMPORTANT: do NOT clear t.alloc here anymore
-  });
-
- updates[`${roomPath()}/settings/phase`]   = 'revealed';
-updates[`${roomPath()}/settings/correct`] = correct;
-updates[`${roomPath()}/settings/timer`]   = { startAt: 0, duration: 0 }; // stop
-await FBDB.update(FBDB.ref(db), updates);
-
-
-  // Remove any auto-reopen code here (we want the revealed screen to stay up)
-  // e.g. delete: setTimeout(()=> FBDB.update(settingsRef(), { phase: 'active', correct: '' }), 900);
-}
-
-  async function clearAll(){
+  async function openAlloc(){
     if(!room) return;
+    const dur = Math.max(0, Number(timerInput.value) || 0);
+
     const snap = await FBDB.get(teamsRef());
     const teams = snap.val() || {};
     const updates = {};
     Object.keys(teams).forEach(k=>{
-      updates[`${roomPath()}/teams/${k}/alloc`] = {A:0,B:0,C:0,D:0};
+      updates[`${roomPath()}/teams/${k}/alloc`]  = {A:0,B:0,C:0,D:0};
+      updates[`${roomPath()}/teams/${k}/locked`] = false;
     });
+
+    updates[`${roomPath()}/settings/phase`]   = 'active';
+    updates[`${roomPath()}/settings/correct`] = '';
+    updates[`${roomPath()}/settings/timer`]   = { startAt: Date.now(), duration: dur };
+
     await FBDB.update(FBDB.ref(db), updates);
   }
 
-  startBtn.addEventListener('click', openAlloc);  // “Start” -> Open allocations
+  async function lockAlloc(){
+    if(!room) return;
+    await FBDB.update(FBDB.ref(db), {
+      [`${roomPath()}/settings/phase`]: 'locked',
+      [`${roomPath()}/settings/timer`]: { startAt: 0, duration: 0 }
+    });
+  }
+
+  async function reveal(){
+    if(!room) return;
+    const correct = revealSelect.value;
+    if(!correct){ alert('Pick the correct option.'); return; }
+
+    const snap = await FBDB.get(teamsRef());
+    const teams = snap.val() || {};
+    const updates = {};
+
+    Object.keys(teams).forEach(k=>{
+      const t = teams[k] || {};
+      const a = Number(t.alloc?.A) || 0;
+      const b = Number(t.alloc?.B) || 0;
+      const c = Number(t.alloc?.C) || 0;
+      const d = Number(t.alloc?.D) || 0;
+      const bal = Number(t.balance ?? 1000000);
+      const newBal = Math.max(0, bal - ((correct!=='A'?a:0)+(correct!=='B'?b:0)+(correct!=='C'?c:0)+(correct!=='D'?d:0)));
+      updates[`${roomPath()}/teams/${k}/balance`] = newBal;
+    });
+
+    updates[`${roomPath()}/settings/phase`]   = 'revealed';
+    updates[`${roomPath()}/settings/correct`] = correct;
+    updates[`${roomPath()}/settings/timer`]   = { startAt: 0, duration: 0 };
+
+    await FBDB.update(FBDB.ref(db), updates);
+  }
+
+  startBtn.addEventListener('click', openAlloc);
   lockBtn .addEventListener('click', lockAlloc);
-  resetBtn.addEventListener('click', clearAll);
+  clearBtn.addEventListener('click', async ()=>{
+    const snap = await FBDB.get(teamsRef());
+    const teams = snap.val() || {};
+    const updates = {};
+    Object.keys(teams).forEach(k=>{ updates[`${roomPath()}/teams/${k}/alloc`] = {A:0,B:0,C:0,D:0}; });
+    await FBDB.update(FBDB.ref(db), updates);
+  });
   el('revealBtn').addEventListener('click', reveal);
 
-  // Render
-  function teamBars(label, tokens, pct, cls){
-    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${money(tokens)}</div></div>`;
+  let hostSettingsCache = null;
+  let hostTeamsCache = null;
+  function everyoneLocked(teams){
+    const ids = Object.keys(teams||{});
+    if(ids.length === 0) return false;
+    return ids.every(id => !!(teams[id] && teams[id].locked === true));
+  }
+  function timerExpired(s){
+    const t = s && s.timer;
+    if(!t || !t.startAt || !t.duration) return false;
+    return Date.now() >= (t.startAt + t.duration*1000);
+  }
+  async function maybeAutoLock(){
+    const s = hostSettingsCache || {};
+    const t = hostTeamsCache   || {};
+    if(s.phase === 'active' && (everyoneLocked(t) || timerExpired(s))){
+      await FBDB.update(FBDB.ref(db), {
+        [`${roomPath()}/settings/phase`]: 'locked',
+        [`${roomPath()}/settings/timer`]: { startAt: 0, duration: 0 }
+      });
+    }
+  }
+
+  function teamBars(label, val, pct, cls){
+    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${money(val)}</div></div>`;
   }
   function renderTeamsHtml(teams, settings){
     const names = Object.keys(teams||{}).sort();
     const correct = settings.correct || '';
+    const isRevealed = settings.phase==='revealed' && !!correct;
     return names.map(name=>{
       const t = teams[name] || {};
       const alloc = t.alloc || {A:0,B:0,C:0,D:0};
       const total = Number(alloc.A||0)+Number(alloc.B||0)+Number(alloc.C||0)+Number(alloc.D||0);
       const bal   = Number(t.balance != null ? t.balance : 1000000);
       const pct = x => total>0 ? Math.round((Number(x)/Math.max(total,1))*100) : 0;
-      const dropClass = opt => (settings.phase==='revealed' && correct && opt!==correct)? ' drop':'';
-      const barCls = opt => (settings.phase==='revealed' && correct) ? (opt===correct?'bar good':'bar bad') : 'bar';
+      const dropClass = opt => (isRevealed && opt!==correct)? ' drop':'';
+      const barCls = opt => isRevealed ? (opt===correct? 'bar good':'bar bad') : 'bar';
+      const lockTag = t.locked? '<span class="pill" style="margin-left:8px">Locked</span>' : '';
 
       return `
         <div class="card"><div class="pad">
           <div class="row" style="justify-content:space-between;align-items:baseline">
-            <h4>${escapeHtml(t.name||name)}</h4>
+            <h4>${escapeHtml(t.name||name)} ${lockTag}</h4>
             <div class="pill money">Balance: ${money(bal)}</div>
           </div>
           ${teamBars('A', alloc.A||0, pct(alloc.A||0), barCls('A'))}
@@ -253,10 +253,10 @@ await FBDB.update(FBDB.ref(db), updates);
           ${teamBars('C', alloc.C||0, pct(alloc.C||0), barCls('C'))}
           ${teamBars('D', alloc.D||0, pct(alloc.D||0), barCls('D'))}
           <div class="tray" style="margin-top:8px">
-            <div class="cell${dropClass('A')}">A: ${alloc.A||0}</div>
-            <div class="cell${dropClass('B')}">B: ${alloc.B||0}</div>
-            <div class="cell${dropClass('C')}">C: ${alloc.C||0}</div>
-            <div class="cell${dropClass('D')}">D: ${alloc.D||0}</div>
+            <div class="cell${dropClass('A')}">A: ${money(alloc.A||0)}</div>
+            <div class="cell${dropClass('B')}">B: ${money(alloc.B||0)}</div>
+            <div class="cell${dropClass('C')}">C: ${money(alloc.C||0)}</div>
+            <div class="cell${dropClass('D')}">D: ${money(alloc.D||0)}</div>
           </div>
         </div></div>`;
     }).join('');
@@ -264,22 +264,23 @@ await FBDB.update(FBDB.ref(db), updates);
 
   function subscribe(){
     if(!room) return;
-    FBDB.onValue(settingsRef(), s=>{
-      const v = s.val() || { phase:'active', correct:'' };
+    FBDB.onValue(settingsRef(), snap=>{
+      hostSettingsCache = snap.val() || {phase:'active'};
       roomLabel.textContent = room;
-      // refresh grid against latest settings for correct/phase colours
       FBDB.get(teamsRef()).then(tSnap=>{
         const teams = tSnap.val() || {};
         teamCount.textContent = Object.keys(teams).length;
-        teamsGrid.innerHTML = renderTeamsHtml(teams, v);
+        teamsGrid.innerHTML = renderTeamsHtml(teams, hostSettingsCache);
       });
+      maybeAutoLock();
     });
     FBDB.onValue(teamsRef(), tSnap=>{
-      const teams = tSnap.val() || {};
-      teamCount.textContent = Object.keys(teams).length;
+      hostTeamsCache = tSnap.val() || {};
+      teamCount.textContent = Object.keys(hostTeamsCache).length;
       FBDB.get(settingsRef()).then(snap=>{
-        teamsGrid.innerHTML = renderTeamsHtml(teams, snap.val() || {phase:'active',correct:''});
+        teamsGrid.innerHTML = renderTeamsHtml(hostTeamsCache, snap.val() || {phase:'active',correct:''});
       });
+      maybeAutoLock();
     });
   }
 
@@ -287,3 +288,4 @@ await FBDB.update(FBDB.ref(db), updates);
 </script>
 </body>
 </html>
+
