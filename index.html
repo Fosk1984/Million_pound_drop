@@ -5,60 +5,168 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Million Pound Drop – Launcher</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Chivo+Mono:wght@700&display=swap" rel="stylesheet">
+
   <style>
-    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--ink:#e6ecff}
+    :root{--bg:#070b1a;--card:#0f1838;--ink:#e9efff;--muted:#8ea0d6;--accent:#5eead4;--accent-2:#8b5cf6}
     *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
-    .wrap{max-width:720px;margin:0 auto;padding:32px 16px 80px}
-    .card{background:linear-gradient(180deg,#16214a 0,#0f1740 100%);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
-    .pad{padding:18px}
-    .title{font-weight:800;letter-spacing:.3px;font-size:28px}
+    body{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;color:var(--ink);background:radial-gradient(1200px 700px at 10% -10%,#1b2a62 0,#0b1020 55%),radial-gradient(900px 600px at 120% 0%,#1d3566 0,#0b1020 55%),var(--bg)}
+    .wrap{max-width:1100px;margin:0 auto;padding:28px 16px 80px}
+    header{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .title{font-weight:900;font-size:30px;letter-spacing:.4px}
+    .title b{background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
     .muted{color:var(--muted)}
-    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    input,button{background:#0e1637;border:1px solid rgba(255,255,255,.12);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:16px}
-    button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%)}
-    button.primary{background:linear-gradient(180deg,#00b3a4 0,#0aa596 100%);border:none;color:#001b18;font-weight:700}
-    .grid{display:grid;gap:12px}
+
+    .card{background:linear-gradient(180deg,rgba(22,33,74,.75),rgba(15,23,64,.85));backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:20px;box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden}
+    .pad{padding:18px}
+
+    .grid{display:grid;gap:16px}
     .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-    @media(max-width:700px){.grid.cols-2{grid-template-columns:1fr}}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
+    @media(max-width:900px){.grid.cols-2{grid-template-columns:1fr}}
+
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    input,button{background:#0e1637;border:1px solid rgba(255,255,255,.14);color:var(--ink);border-radius:14px;padding:12px 14px;font-size:16px}
+    input{min-width:220px}
+    button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%);box-shadow:0 10px 24px rgba(0,0,0,.35);transition:transform .15s ease, filter .2s ease}
+    button:hover{transform:translateY(-1px);filter:brightness(1.05)}
+    button:active{transform:translateY(0)}
+    .primary{background:linear-gradient(135deg,var(--accent) 0%, #22d3ee 40%, var(--accent-2) 100%);border:none;color:#041316;font-weight:800;text-shadow:0 1px 0 rgba(255,255,255,.25)}
+    .ghost{background:transparent}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(13,21,51,.85);border:1px solid rgba(255,255,255,.14);font-size:12px;color:var(--muted)}
+
+    .links{display:grid;gap:8px;margin-top:10px}
+    .linkRow{display:grid;grid-template-columns:130px 1fr auto;gap:10px;align-items:center}
+    .mono{font-family:"Chivo Mono",monospace;font-size:14px;letter-spacing:.2px}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="card">
-    <div class="pad">
-      <div class="title">Million Pound Drop – Launcher</div>
-      <p class="muted">Enter a room code (e.g., <b>KEELE-2025</b>) and optionally a team name. Use the buttons to open each view in a new tab with the correct room. Team name (if set) is stored locally so the Team page picks it up.</p>
-      <div class="row" style="margin:12px 0">
-        <input id="roomInput" placeholder="Room code (e.g. KEELE-2025)" />
-        <input id="teamInput" placeholder="Team name (for Team view)" />
-      </div>
-      <div class="grid cols-2">
-        <button id="openHost" class="primary">Open Host View</button>
-        <button id="openTeam" class="primary">Open Team View</button>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button id="openSpectator">Open Spectator View</button>
-        <span class="pill">Files must be in the repo root: <code>host.html</code>, <code>team.html</code>, <code>spectator.html</code></span>
+  <header>
+    <div>
+      <div class="title">💷 <b>Million</b> Pound Drop — Launcher</div>
+      <div class="muted">Open the right view, fast links, and save your room/team.</div>
+    </div>
+  </header>
+
+  <section class="grid cols-2">
+    <div class="card">
+      <div class="pad">
+        <h3 style="margin:0 0 8px">Room & Team</h3>
+        <div class="row" style="margin-bottom:10px">
+          <input id="room" placeholder="Room code (e.g. KEELE-2025)" />
+          <input id="team" placeholder="Team name (for Team view)" />
+        </div>
+        <div class="row">
+          <button id="openHost" class="primary">Open Host View</button>
+          <button id="openTeam" class="primary">Open Team View</button>
+          <button id="openSpec">Open Spectator View</button>
+        </div>
+        <div class="pill" style="margin-top:10px">Tip: You can open multiple Team tabs, one per team.</div>
       </div>
     </div>
-  </div>
+
+    <div class="card">
+      <div class="pad">
+        <h3 style="margin:0 0 8px">Quick Links</h3>
+        <div class="links">
+          <div class="linkRow"><div class="pill">Host</div><div id="hostLink" class="mono">—</div><button data-copy="host" class="ghost">Copy</button></div>
+          <div class="linkRow"><div class="pill">Team</div><div id="teamLink" class="mono">—</div><button data-copy="team" class="ghost">Copy</button></div>
+          <div class="linkRow"><div class="pill">Spectator</div><div id="specLink" class="mono">—</div><button data-copy="spec" class="ghost">Copy</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <div class="pad">
+      <h3 style="margin:0 0 8px">How to run a round</h3>
+      <ol style="margin:0 0 6px 18px; line-height:1.6">
+        <li>Open <b>Host</b> and set a room. This creates the room.</li>
+        <li>Teams open <b>Team</b>, enter room & team, then wait.</li>
+        <li>Host presses <b>Start</b> or <b>Start Next</b> to begin the timer.</li>
+        <li>Teams allocate their full balance and <b>Lock In</b>.</li>
+        <li>When done, Host selects the correct answer and presses <b>Reveal</b>.</li>
+      </ol>
+      <div class="pill">Balances update automatically; eliminated teams are marked.</div>
+    </div>
+  </section>
 </div>
+
 <script>
-  const roomEl=document.getElementById('roomInput');
-  const teamEl=document.getElementById('teamInput');
-  const open=(path)=>{
-    const room=(roomEl.value||'').trim(); if(!room){ alert('Enter a room code.'); return; }
-    const url= new URL(path, location.origin + location.pathname.replace(/[^\/]*$/,''));
-    url.searchParams.set('room', room);
-    // stash team for team.html to pick up from localStorage
-    const team=(teamEl.value||'').trim(); if(team){ try{ localStorage.setItem('mpd_team', team); }catch(e){} }
-    window.open(url.toString(), '_blank');
-  };
-  document.getElementById('openHost').onclick=()=>open('host.html');
-  document.getElementById('openTeam').onclick=()=>open('team.html');
-  document.getElementById('openSpectator').onclick=()=>open('spectator.html');
+  const $ = id => document.getElementById(id);
+  const roomEl = $('room');
+  const teamEl = $('team');
+  const hostLink = $('hostLink');
+  const teamLink = $('teamLink');
+  const specLink = $('specLink');
+
+  // Seed from storage
+  roomEl.value = localStorage.getItem('mpd_room') || '';
+  teamEl.value = localStorage.getItem('mpd_team') || '';
+
+  function base(){
+    const url = new URL(window.location.href);
+    url.search = '';
+    // Drop filename (index.html or whatever) and keep folder
+    const parts = url.pathname.split('/');
+    parts.pop();
+    url.pathname = parts.join('/') + '/';
+    return url.toString();
+  }
+
+  function buildLinks(){
+    const r = roomEl.value.trim();
+    const t = teamEl.value.trim();
+    const b = base();
+    const host = r ? `${b}host.html?room=${encodeURIComponent(r)}` : `${b}host.html`;
+    const team = r ? `${b}team.html?room=${encodeURIComponent(r)}` : `${b}team.html`;
+    const spec = r ? `${b}spectator.html?room=${encodeURIComponent(r)}` : `${b}spectator.html`;
+    hostLink.textContent = host;
+    teamLink.textContent = t ? `${team}&team=${encodeURIComponent(t)}` : team;
+    specLink.textContent = spec;
+  }
+
+  buildLinks();
+  roomEl.addEventListener('input', buildLinks);
+  teamEl.addEventListener('input', buildLinks);
+
+  function saveState(){
+    localStorage.setItem('mpd_room', roomEl.value.trim());
+    localStorage.setItem('mpd_team', teamEl.value.trim());
+  }
+
+  $('openHost').addEventListener('click', ()=>{
+    const r = roomEl.value.trim(); if(!r){ alert('Enter a room code'); return; }
+    saveState();
+    window.open(`host.html?room=${encodeURIComponent(r)}`, '_blank');
+  });
+  $('openTeam').addEventListener('click', ()=>{
+    const r = roomEl.value.trim(); if(!r){ alert('Enter a room code'); return; }
+    const t = teamEl.value.trim(); if(!t){ alert('Enter a team name'); return; }
+    saveState();
+    window.open(`team.html?room=${encodeURIComponent(r)}&team=${encodeURIComponent(t)}`, '_blank');
+  });
+  $('openSpec').addEventListener('click', ()=>{
+    const r = roomEl.value.trim(); if(!r){ alert('Enter a room code'); return; }
+    saveState();
+    window.open(`spectator.html?room=${encodeURIComponent(r)}`, '_blank');
+  });
+
+  // Copy link buttons
+  document.querySelectorAll('[data-copy]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const kind = btn.getAttribute('data-copy');
+      const text = kind==='host' ? hostLink.textContent : kind==='team' ? teamLink.textContent : specLink.textContent;
+      navigator.clipboard.writeText(text).then(()=>{
+        btn.textContent = 'Copied!';
+        setTimeout(()=> btn.textContent = 'Copy', 1200);
+      });
+    })
+  });
 </script>
 </body>
 </html>
