@@ -82,7 +82,7 @@
 </div>
 
 <script type="module">
-  // Firebase
+  // Firebase config (yours)
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -93,29 +93,33 @@
     appId: "1:866523395054:web:dbbcd7c1b281cac32994ff",
     measurementId: "G-6VRXQSGG4H"
   };
+
   import * as FBApp from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import * as FBDB  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
   const app = FBApp.initializeApp(firebaseConfig);
   const db  = FBDB.getDatabase(app);
 
   // Els
   const el=id=>document.getElementById(id);
   const money=n=>'£'+Number(n||0).toLocaleString();
+
   let room = new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
   const roomInput=el('roomInput'), joinBtn=el('joinBtn');
   const spectatorGrid=el('spectatorGrid');
   const specRoom=el('specRoom'), specTeamCount=el('specTeamCount');
   const specRound=el('specRound'), specPhase=el('specPhase'), specCorrect=el('specCorrect');
-  roomInput.value=room; if(room) specRoom.textContent=room;
 
-  // Refs (support both schemas)
-  const roomPath = ()=>`rooms/${room}`;
-  const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);    // new schema (no rounds)
-  const roundRef  =()=> FBDB.ref(db, roomPath()+`/round`);        // legacy schema (with rounds)
+  roomInput.value = room; if(room) specRoom.textContent = room;
+
+  // Refs (support new no-rounds schema; still tolerant of legacy)
+  const roomPath  = ()=>`rooms/${room}`;
+  const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
+  const roundRef  =()=> FBDB.ref(db, roomPath()+`/round`); // legacy fallback
   const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
 
-  // Normalize state (works for both schemas)
-  const normalizeState = (v)=>({
+  // Normalize settings/round into one state
+  const normalizeState = v => ({
     number: v?.number ?? 1,
     phase:  v?.phase  ?? 'active',
     correct:v?.correct ?? ''
@@ -131,7 +135,7 @@
     const isRevealed = state.phase==='revealed' && !!correct;
     return names.map(name=>{
       const t = teams[name] || {};
-      // support both schemas: new (t.alloc £), legacy (t.allocations[state.number] tokens)
+      // new schema: t.alloc (£); legacy: t.allocations[state.number] (tokens → we show raw number)
       const r = state.number || 1;
       const alloc = t.alloc || ((t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0});
       const total = Number(alloc.A||0)+Number(alloc.B||0)+Number(alloc.C||0)+Number(alloc.D||0);
@@ -158,31 +162,75 @@
     }).join('');
   }
 
-  function renderAll(state){
+  function renderAll(state, teams){
+    specRoom.textContent = room;
     specPhase.textContent = state.phase || '—';
     specCorrect.textContent = state.correct || '—';
     specRound.textContent = state.number ?? '—';
     specCorrect.classList.toggle('good', state.phase==='revealed' && !!state.correct);
 
+    spectatorGrid.innerHTML = renderTeamsHtml(teams, state);
+    specTeamCount.textContent = Object.keys(teams||{}).length;
+  }
+
+  // --- Freeze/thaw logic ---
+  let frozenState = null;
+  let frozenTeams = null;
+  let teamsListener = null;
+
+  function attachTeamsLive(){
+    if(teamsListener) return;
+    teamsListener = snap=>{
+      if(frozenState) return; // ignore live updates while frozen
+      const teams = snap.val() || {};
+      // read current state to render consistently
+      Promise.all([FBDB.get(settingsRef()), FBDB.get(roundRef())]).then(([s1,s2])=>{
+        const v = s1.val() || s2.val() || {};
+        renderAll(normalizeState(v), teams);
+      });
+    };
+    FBDB.onValue(teamsRef(), teamsListener);
+  }
+  function detachTeamsLive(){
+    if(!teamsListener) return;
+    FBDB.off(teamsRef(), 'value', teamsListener);
+    teamsListener = null;
+  }
+
+  function handleStateUpdate(raw){
+    const state = normalizeState(raw);
+
+    // If revealed: freeze snapshot (once) and stop live teams updates
+    if(state.phase==='revealed' && state.correct){
+      if(!frozenState){
+        frozenState = state;
+        FBDB.get(teamsRef()).then(ts=>{
+          frozenTeams = ts.val() || {};
+          renderAll(frozenState, frozenTeams);
+        });
+      }
+      detachTeamsLive();
+      return;
+    }
+
+    // If not revealed (active/locked): thaw and show live
+    if(frozenState){
+      frozenState = null;
+      frozenTeams = null;
+    }
+    attachTeamsLive();
+    // Also render once with current teams
     FBDB.get(teamsRef()).then(ts=>{
-      const teams = ts.val() || {};
-      specTeamCount.textContent = Object.keys(teams).length;
-      spectatorGrid.innerHTML = renderTeamsHtml(teams, state);
+      renderAll(state, ts.val() || {});
     });
   }
 
-  // Subscribe (both schemas; whichever updates will render)
+  // Subscribe to both settings (new) and round (legacy)
   function subscribe(){
     if(!room) return;
-    FBDB.onValue(settingsRef(), s => { const v = s.val(); if(v) renderAll(normalizeState(v)); });
-    FBDB.onValue(roundRef(),    s => { const v = s.val(); if(v) renderAll(normalizeState(v)); });
-    FBDB.onValue(teamsRef(),    ts=> {
-      // re-render with latest state when teams change
-      Promise.all([FBDB.get(settingsRef()), FBDB.get(roundRef())]).then(([s1,s2])=>{
-        const v = s1.val() || s2.val() || {phase:'active',correct:'',number:1};
-        renderAll(normalizeState(v));
-      });
-    });
+    FBDB.onValue(settingsRef(), s=>{ if(s.exists()) handleStateUpdate(s.val()); });
+    FBDB.onValue(roundRef(),    s=>{ if(s.exists()) handleStateUpdate(s.val()); });
+    attachTeamsLive();
   }
 
   function joinRoom(){
@@ -190,7 +238,8 @@
     if(!room){ alert('Enter a room code'); return; }
     localStorage.setItem('mpd_room', room);
     specRoom.textContent = room;
-    subscribe();
+    // reset listeners by reloading page to new room (simplest)
+    location.search = `?room=${encodeURIComponent(room)}`;
   }
   joinBtn.addEventListener('click', joinRoom);
 
