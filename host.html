@@ -149,7 +149,24 @@
   joinBtn.addEventListener('click', joinRoom);
 
   // Host actions
-  async function openAlloc(){ if(!room) return; await FBDB.update(settingsRef(), { phase: 'active', correct: '' }); }
+ async function openAlloc(){
+  if(!room) return;
+
+  // Clear allocations for all teams for the next question
+  const snap = await FBDB.get(teamsRef());
+  const teams = snap.val() || {};
+  const updates = {};
+  Object.keys(teams).forEach(k=>{
+    updates[`${roomPath()}/teams/${k}/alloc`] = {A:0,B:0,C:0,D:0};
+  });
+
+  // Reopen allocations
+  updates[`${roomPath()}/settings/phase`] = 'active';
+  updates[`${roomPath()}/settings/correct`] = '';
+
+  await FBDB.update(FBDB.ref(db), updates);
+}
+
   async function lockAlloc(){ if(!room) return; await FBDB.update(settingsRef(), { phase: 'locked' }); }
 
 async function reveal(){
