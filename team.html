@@ -6,7 +6,7 @@
   <title>Million Pound Drop – Team</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
   <style>
-    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--ink:#e6ecff}
+    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--ink:#e6ecff}
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
     .wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
@@ -21,9 +21,8 @@
     button.ghost{background:transparent}
     .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
     .grid{display:grid;gap:12px}
-    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
     .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-    @media(max-width:720px){.grid.cols-2{grid-template-columns:1fr}.grid.cols-4{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:720px){.grid.cols-4{grid-template-columns:repeat(2,1fr)}}
     .big{font-size:28px;font-weight:800}
   </style>
 </head>
@@ -46,7 +45,7 @@
       <div class="row" style="align-items:flex-end">
         <div>
           <div class="pill">Round</div>
-          <div class="big" id="roundNum">1</div>
+          <div class="big" id="roundNum">—</div>
         </div>
         <div>
           <div class="pill">Time left</div>
@@ -58,24 +57,24 @@
         </div>
       </div>
 
-      <div class="pill" style="margin:8px 0">Allocated: <span id="allocated">0</span> / 1000 tokens · Remaining: <span id="remaining">1000</span></div>
+      <div class="pill" style="margin:8px 0">Allocated: <span id="allocated">0</span> / £<span id="remaining">1,000,000</span> remaining</div>
 
       <div class="grid cols-4">
         <div>
           <label>A</label>
-          <input type="number" id="aInput" min="0" max="1000" value="0" />
+          <input type="number" id="aInput" min="0" value="0" />
         </div>
         <div>
           <label>B</label>
-          <input type="number" id="bInput" min="0" max="1000" value="0" />
+          <input type="number" id="bInput" min="0" value="0" />
         </div>
         <div>
           <label>C</label>
-          <input type="number" id="cInput" min="0" max="1000" value="0" />
+          <input type="number" id="cInput" min="0" value="0" />
         </div>
         <div>
           <label>D</label>
-          <input type="number" id="dInput" min="0" max="1000" value="0" />
+          <input type="number" id="dInput" min="0" value="0" />
         </div>
       </div>
 
@@ -119,33 +118,8 @@
   const allocated=el('allocated'), remaining=el('remaining');
   const maxEvenBtn=el('maxEvenBtn'), clearBtn=el('clearBtn'), submitBtn=el('submitBtn');
   const teamMsg=el('teamMsg'), teamBalance=el('teamBalance'), timeLeft=el('timeLeft'), roundNum=el('roundNum');
-// === TEAM COUNTDOWN (only while phase === 'active') ===
-let countdownRAF = null;
-function bindCountdown(v){
-  if (countdownRAF) cancelAnimationFrame(countdownRAF);
 
-  const t = v && v.timer;
-  const active = v && v.phase === 'active';   // only tick during 'active'
-  if (!t || !t.startAt || !t.duration || !active) {
-    timeLeft.textContent = '—';
-    return;
-  }
-
-  const deadline = t.startAt + t.duration*1000;
-  function tick(){
-    const sec = Math.max(0, Math.ceil((deadline - Date.now())/1000));
-    timeLeft.textContent = `${sec}s`;
-    if (sec > 0 && v.phase === 'active') {
-      countdownRAF = requestAnimationFrame(tick);
-    }
-  }
-  tick();
-}
-
-  // Minor UI: hide timer/round label meaning (we’ll repurpose text)
   roundNum.textContent = '—';
-  timeLeft.textContent = '—';
-
   roomInput.value=room; teamInput.value=teamName;
 
   const roomPath = ()=>`rooms/${room}`;
@@ -154,6 +128,7 @@ function bindCountdown(v){
   const teamRef   =()=> FBDB.ref(db, roomPath()+`/teams/${encodeURIComponent(teamName)}`);
 
   let currentBalance = 1000000;
+  let settingsCache = null;
 
   function refreshAllocUI(){
     const a=clamp(aInput.value,0,Infinity),
@@ -181,68 +156,86 @@ function bindCountdown(v){
     teamName = teamInput.value.trim();
     if(!room){ alert('Enter a room code'); return; }
     if(!teamName){ alert('Enter a team name'); return; }
+
     localStorage.setItem('mpd_room', room);
     localStorage.setItem('mpd_team', teamName);
 
-    // Make sure room exists and team exists with a starting balance (only if missing)
     await FBDB.update(settingsRef(), { createdAt: Date.now() });
     const tSnap = await FBDB.get(teamRef());
     if(!tSnap.exists() || tSnap.val().balance==null){
-      await FBDB.update(teamRef(), { name: teamName, balance: 1000000, lastSeen: Date.now(), alloc: {A:0,B:0,C:0,D:0} });
+      await FBDB.update(teamRef(), { name: teamName, balance: 1000000, locked: false, lastSeen: Date.now(), alloc: {A:0,B:0,C:0,D:0} });
     } else {
       await FBDB.update(teamRef(), { name: teamName, lastSeen: Date.now() });
     }
     subscribe();
   }
   joinBtn.addEventListener('click', joinRoom);
-async function submitAllocation(){
-  if(!room||!teamName){ alert('Join a room and set a team name first.'); return; }
-  const setSnap = await FBDB.get(settingsRef());
-  const settings = setSnap.val() || {};
-  if(settings.phase !== 'active'){ teamMsg.textContent = 'Allocations are closed.'; return; }
 
-  const a=clamp(aInput.value,0,Infinity),
-        b=clamp(bInput.value,0,Infinity),
-        c=clamp(cInput.value,0,Infinity),
-        d=clamp(dInput.value,0,Infinity);
-  const sum = a+b+c+d;
-  if(sum > currentBalance){ alert('You cannot allocate more than your current balance.'); return; }
+  async function submitAllocation(){
+    if(!room||!teamName){ alert('Join a room and set a team name first.'); return; }
+    const setSnap = await FBDB.get(settingsRef());
+    const settings = setSnap.val() || {};
+    if(settings.phase !== 'active'){ teamMsg.textContent = 'Allocations are closed.'; return; }
 
-  await FBDB.update(FBDB.ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}`), {
-    alloc: {A:a,B:b,C:c,D:d},
-    locked: true,                 // <-- mark this team as locked in
-    lastSeen: Date.now()
-  });
-  teamMsg.textContent = 'Locked in.';
-}
+    const a=clamp(aInput.value,0,Infinity),
+          b=clamp(bInput.value,0,Infinity),
+          c=clamp(cInput.value,0,Infinity),
+          d=clamp(dInput.value,0,Infinity);
+    const sum = a+b+c+d;
+    if(sum > currentBalance){ alert('You cannot allocate more than your current balance.'); return; }
+
+    await FBDB.update(FBDB.ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}`), {
+      alloc: {A:a,B:b,C:c,D:d},
+      locked: true,
+      lastSeen: Date.now()
+    });
+    teamMsg.textContent = 'Locked in.';
+  }
   submitBtn.addEventListener('click', submitAllocation);
+
+  let countdownRAF = null;
+  function bindCountdown(v){
+    if (countdownRAF) cancelAnimationFrame(countdownRAF);
+
+    const t = v && v.timer;
+    const active = v && v.phase === 'active';
+    if (!t || !t.startAt || !t.duration || !active) {
+      timeLeft.textContent = '—';
+      return;
+    }
+
+    const deadline = t.startAt + t.duration*1000;
+    function tick(){
+      const sec = Math.max(0, Math.ceil((deadline - Date.now())/1000));
+      timeLeft.textContent = `${sec}s`;
+      if (sec > 0 && v.phase === 'active') {
+        countdownRAF = requestAnimationFrame(tick);
+      }
+    }
+    tick();
+  }
 
   function subscribe(){
     if(!room) return;
 
-    // Settings: use phase to enable/disable inputs
     FBDB.onValue(settingsRef(), s=>{
       const v = s.val() || {phase:'active'};
-      settingsCache = v; 
-      const disabled = v.phase !== 'active';
-      [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = disabled);
-      const phaseMsg = {active:'Allocations open – choose your split!', locked:'Locked – waiting for reveal…', revealed: v.correct?`Revealed: ${v.correct}`:'Revealed', undefined:'—'};
+      settingsCache = v;
+      const phaseMsg = {active:'Allocations open – choose your split!', locked:'Locked – waiting for reveal…', revealed: v.correct?`Revealed: ${v.correct}`:'Revealed'};
       teamMsg.textContent = phaseMsg[v.phase] || '—';
-      bindCountdown(v); 
+      bindCountdown(v);
     });
 
-    // Your team
     FBDB.onValue(teamRef(), tSnap=>{
       const t = tSnap.val() || {};
       currentBalance = Number(t.balance != null ? t.balance : 1000000);
       teamBalance.textContent = money(currentBalance);
-      // Clear inputs if server cleared alloc after reveal
       const alloc = t.alloc || {A:0,B:0,C:0,D:0};
       aInput.value = alloc.A||0; bInput.value = alloc.B||0; cInput.value = alloc.C||0; dInput.value = alloc.D||0;
       refreshAllocUI();
-      const isLocked = !!t.locked;
-[aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = isLocked || (settingsCache?.phase!=='active'));
 
+      const isLocked = !!t.locked;
+      [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = isLocked || (settingsCache?.phase!=='active'));
     });
   }
 
@@ -251,3 +244,4 @@ async function submitAllocation(){
 </script>
 </body>
 </html>
+
