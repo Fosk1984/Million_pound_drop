@@ -152,37 +152,37 @@
   async function openAlloc(){ if(!room) return; await FBDB.update(settingsRef(), { phase: 'active', correct: '' }); }
   async function lockAlloc(){ if(!room) return; await FBDB.update(settingsRef(), { phase: 'locked' }); }
 
-  async function reveal(){
-    if(!room) return;
-    const correct = revealSelect.value;
-    if(!correct){ alert('Pick the correct option.'); return; }
+async function reveal(){
+  if(!room) return;
+  const correct = revealSelect.value;
+  if(!correct){ alert('Pick the correct option.'); return; }
 
-    // read teams once, compute new balances, clear allocations
-    const snap = await FBDB.get(teamsRef());
-    const teams = snap.val() || {};
-    const updates = {};
-    Object.keys(teams).forEach(k=>{
-      const t = teams[k] || {};
-      const a = (t.alloc && Number(t.alloc.A)) || 0;
-      const b = (t.alloc && Number(t.alloc.B)) || 0;
-      const c = (t.alloc && Number(t.alloc.C)) || 0;
-      const d = (t.alloc && Number(t.alloc.D)) || 0;
-      const bal = Number(t.balance != null ? t.balance : 1000000);
+  const snap = await FBDB.get(teamsRef());
+  const teams = snap.val() || {};
+  const updates = {};
 
-      const lost = {A:a,B:b,C:c,D:d};
-      // sum everything except the correct key
-      const newBal = Math.max(0, bal - ( (correct!=='A'?a:0) + (correct!=='B'?b:0) + (correct!=='C'?c:0) + (correct!=='D'?d:0) ));
+  Object.keys(teams).forEach(k=>{
+    const t = teams[k] || {};
+    const a = Number(t.alloc?.A) || 0;
+    const b = Number(t.alloc?.B) || 0;
+    const c = Number(t.alloc?.C) || 0;
+    const d = Number(t.alloc?.D) || 0;
+    const bal = Number(t.balance ?? 1000000);
 
-      updates[`${roomPath()}/teams/${k}/balance`] = newBal;
-      updates[`${roomPath()}/teams/${k}/alloc`]   = {A:0,B:0,C:0,D:0};
-    });
+    const newBal = Math.max(0, bal - ((correct!=='A'?a:0) + (correct!=='B'?b:0) + (correct!=='C'?c:0) + (correct!=='D'?d:0)));
+    updates[`${roomPath()}/teams/${k}/balance`] = newBal;
 
-    updates[`${roomPath()}/settings/phase`] = 'revealed';
-    updates[`${roomPath()}/settings/correct`] = correct;
+    // IMPORTANT: do NOT clear t.alloc here anymore
+  });
 
-    await FBDB.update(FBDB.ref(db), updates);
+  updates[`${roomPath()}/settings/phase`] = 'revealed';
+  updates[`${roomPath()}/settings/correct`] = correct;
 
-  }
+  await FBDB.update(FBDB.ref(db), updates);
+
+  // Remove any auto-reopen code here (we want the revealed screen to stay up)
+  // e.g. delete: setTimeout(()=> FBDB.update(settingsRef(), { phase: 'active', correct: '' }), 900);
+}
 
   async function clearAll(){
     if(!room) return;
