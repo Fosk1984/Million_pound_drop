@@ -108,6 +108,29 @@
   const roomInput=el('roomInput'), joinBtn=el('joinBtn');
   const spectatorGrid=el('spectatorGrid');
   const specRoom=el('specRoom'), specTeamCount=el('specTeamCount');
+  // === SPECTATOR COUNTDOWN (only while phase === 'active') ===
+let specCountdownRAF = null;
+function specBindCountdown(state){
+  if (specCountdownRAF) cancelAnimationFrame(specCountdownRAF);
+
+  const t = state && state.timer;
+  const active = state && state.phase === 'active';
+  if (!t || !t.startAt || !t.duration || !active) {
+    specPhase.textContent = state?.phase || '—';
+    return;
+  }
+
+  const deadline = t.startAt + t.duration*1000;
+  function tick(){
+    const sec = Math.max(0, Math.ceil((deadline - Date.now())/1000));
+    specPhase.textContent = `${state.phase} – ${sec}s`;
+    if (sec > 0 && state.phase === 'active') {
+      specCountdownRAF = requestAnimationFrame(tick);
+    }
+  }
+  tick();
+}
+
   const specRound=el('specRound'), specPhase=el('specPhase'), specCorrect=el('specCorrect');
 
   roomInput.value = room; if(room) specRoom.textContent = room;
@@ -163,6 +186,7 @@
   }
 
   function renderAll(state, teams){
+    specBindCountdown(state);
     specRoom.textContent = room;
     specPhase.textContent = state.phase || '—';
     specCorrect.textContent = state.correct || '—';
