@@ -128,7 +128,7 @@
   const money=n=>'£'+Number(n||0).toLocaleString();
 
   let room=new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
-  let teamName=localStorage.getItem('mpd_team')||'';
+  let teamName=(new URLSearchParams(location.search).get('team'))||localStorage.getItem('mpd_team')||'';
 
   const roomInput=el('roomInput'); const teamInput=el('teamInput'); const joinBtn=el('joinBtn');
   const aInput=el('aInput'); const bInput=el('bInput'); const cInput=el('cInput'); const dInput=el('dInput');
@@ -212,6 +212,20 @@
       const v=snap.val()||{number:1,phase:'between',duration:45,startAt:0,correct:''};
       roundNum.textContent=v.number||1;
       bindCountdown(v);
+      // Fallback elimination if timer has expired and we're not locked
+      const t=v&&v.timer;
+      if(v.phase==='active' && t && t.startAt && t.duration>0){
+        const deadline = t.startAt + t.duration*1000;
+        if(Date.now() >= deadline){
+          FBDB.get(teamRef()).then(meSnap=>{
+            const me = meSnap.val() || {};
+            const alive = !(me.dead===true) && Number(me.balance||0) > 0;
+            if(alive && me.locked !== true){
+              FBDB.update(teamRef(), { balance:0, dead:true, locked:true, timedOut:true });
+            }
+          });
+        }
+      }
       const phases={between:'Waiting for the host to start…',active:'Round active – allocate & lock in!',locked:'Locked – awaiting reveal…',revealed:v.correct?`Revealed: ${v.correct}`:'Revealed'}; teamMsg.textContent=phases[v.phase]||'—';
       const disabled=v.phase!=='active'; [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled=disabled);
     });
