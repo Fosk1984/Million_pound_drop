@@ -6,14 +6,6 @@
   <title>Million Pound Drop – Spectator</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
   <style>
-
-    /* Highlight the correct answer */
-.bar.good{outline:2px solid #22c55e;box-shadow:0 0 0 2px #16a34a inset,0 0 18px rgba(34,197,94,.35)}
-.tray .cell.correct{border-color:#22c55e;box-shadow:0 0 18px rgba(34,197,94,.45);transform:scale(1.03)}
-#specCorrect.good{display:inline-block;padding:4px 10px;border-radius:999px;background:linear-gradient(180deg,#22c55e,#16a34a);color:#001b18;box-shadow:0 0 18px rgba(34,197,94,.45)}
-@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
-#specCorrect.good{animation:pulse 1.2s ease-in-out 3}
-
     :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--ink:#e6ecff}
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
@@ -29,7 +21,7 @@
     input,button{background:#0e1637;border:1px solid rgba(255,255,255,.12);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:15px}
     button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%)}
     .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
-    .barRow{display:grid;grid-template-columns:40px 1fr 80px;align-items:center;gap:10px}
+    .barRow{display:grid;grid-template-columns:40px 1fr 110px;align-items:center;gap:10px}
     .bar{height:18px;background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
     .bar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.2),rgba(94,234,212,.8));transition:width .5s ease}
     .bar.bad>span{background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(239,68,68,.9))}
@@ -37,7 +29,11 @@
     .tray{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
     .tray .cell{background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;text-align:center}
     .cell.drop{animation:drop 900ms ease forwards}
+    .tray .cell.correct{border-color:#22c55e;box-shadow:0 0 18px rgba(34,197,94,.45);transform:scale(1.03)}
+    #specCorrect.good{display:inline-block;padding:4px 10px;border-radius:999px;background:linear-gradient(180deg,#22c55e,#16a34a);color:#001b18;box-shadow:0 0 18px rgba(34,197,94,.45)}
     @keyframes drop{0%{transform:translateY(0);opacity:1}80%{transform:translateY(32px);opacity:.6}100%{transform:translateY(80px);opacity:0}}
+    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+    #specCorrect.good{animation:pulse 1.2s ease-in-out 3}
   </style>
 </head>
 <body>
@@ -82,7 +78,6 @@
 </div>
 
 <script type="module">
-  // Firebase config (yours)
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -100,7 +95,6 @@
   const app = FBApp.initializeApp(firebaseConfig);
   const db  = FBDB.getDatabase(app);
 
-  // Els
   const el=id=>document.getElementById(id);
   const money=n=>'£'+Number(n||0).toLocaleString();
 
@@ -108,47 +102,17 @@
   const roomInput=el('roomInput'), joinBtn=el('joinBtn');
   const spectatorGrid=el('spectatorGrid');
   const specRoom=el('specRoom'), specTeamCount=el('specTeamCount');
-  // === SPECTATOR COUNTDOWN (only while phase === 'active') ===
-let specCountdownRAF = null;
-function specBindCountdown(state){
-  if (specCountdownRAF) cancelAnimationFrame(specCountdownRAF);
-
-  const t = state && state.timer;
-  const active = state && state.phase === 'active';
-  if (!t || !t.startAt || !t.duration || !active) {
-    specPhase.textContent = state?.phase || '—';
-    return;
-  }
-
-  const deadline = t.startAt + t.duration*1000;
-  function tick(){
-    const sec = Math.max(0, Math.ceil((deadline - Date.now())/1000));
-    specPhase.textContent = `${state.phase} – ${sec}s`;
-    if (sec > 0 && state.phase === 'active') {
-      specCountdownRAF = requestAnimationFrame(tick);
-    }
-  }
-  tick();
-}
-
   const specRound=el('specRound'), specPhase=el('specPhase'), specCorrect=el('specCorrect');
 
   roomInput.value = room; if(room) specRoom.textContent = room;
 
-  // Refs (support new no-rounds schema; still tolerant of legacy)
-  const roomPath  = ()=>`rooms/${room}`;
+  const roomPath = ()=>`rooms/${room}`;
   const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
-  const roundRef  =()=> FBDB.ref(db, roomPath()+`/round`); // legacy fallback
+  const roundRef  =()=> FBDB.ref(db, roomPath()+`/round`);
   const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
 
-  // Normalize settings/round into one state
-  const normalizeState = v => ({
-    number: v?.number ?? 1,
-    phase:  v?.phase  ?? 'active',
-    correct:v?.correct ?? ''
-  });
+  const normalizeState = v => ({ number: v?.number ?? 1, phase: v?.phase ?? 'active', correct: v?.correct ?? '', timer: v?.timer || null });
 
-  // Render helpers
   function teamBars(label, val, pct, cls){
     return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${money(val)}</div></div>`;
   }
@@ -158,7 +122,6 @@ function specBindCountdown(state){
     const isRevealed = state.phase==='revealed' && !!correct;
     return names.map(name=>{
       const t = teams[name] || {};
-      // new schema: t.alloc (£); legacy: t.allocations[state.number] (tokens → we show raw number)
       const r = state.number || 1;
       const alloc = t.alloc || ((t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0});
       const total = Number(alloc.A||0)+Number(alloc.B||0)+Number(alloc.C||0)+Number(alloc.D||0);
@@ -169,35 +132,55 @@ function specBindCountdown(state){
       const barCls = opt => isRevealed ? (opt===correct? 'bar good' : 'bar bad') : 'bar';
 
       return `
-        <div class="card"><div class="pad">
-          <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${money(bal)}</div></div>
-          ${teamBars('A', alloc.A||0, pct(alloc.A||0), barCls('A'))}
-          ${teamBars('B', alloc.B||0, pct(alloc.B||0), barCls('B'))}
-          ${teamBars('C', alloc.C||0, pct(alloc.C||0), barCls('C'))}
-          ${teamBars('D', alloc.D||0, pct(alloc.D||0), barCls('D'))}
-          <div class="tray" style="margin-top:8px">
-            <div class="cell${dropClass('A')}${cellCorrect('A')}">A: ${money(alloc.A||0)}</div>
-            <div class="cell${dropClass('B')}${cellCorrect('B')}">B: ${money(alloc.B||0)}</div>
-            <div class="cell${dropClass('C')}${cellCorrect('C')}">C: ${money(alloc.C||0)}</div>
-            <div class="cell${dropClass('D')}${cellCorrect('D')}">D: ${money(alloc.D||0)}</div>
-          </div>
-        </div></div>`;
+      <div class="card"><div class="pad">
+        <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${money(bal)}</div></div>
+        ${teamBars('A', alloc.A||0, pct(alloc.A||0), barCls('A'))}
+        ${teamBars('B', alloc.B||0, pct(alloc.B||0), barCls('B'))}
+        ${teamBars('C', alloc.C||0, pct(alloc.C||0), barCls('C'))}
+        ${teamBars('D', alloc.D||0, pct(alloc.D||0), barCls('D'))}
+        <div class="tray" style="margin-top:8px">
+          <div class="cell${dropClass('A')}${cellCorrect('A')}">A: ${money(alloc.A||0)}</div>
+          <div class="cell${dropClass('B')}${cellCorrect('B')}">B: ${money(alloc.B||0)}</div>
+          <div class="cell${dropClass('C')}${cellCorrect('C')}">C: ${money(alloc.C||0)}</div>
+          <div class="cell${dropClass('D')}${cellCorrect('D')}">D: ${money(alloc.D||0)}</div>
+        </div>
+      </div></div>`;
     }).join('');
   }
 
+  let specCountdownRAF = null;
+  function specBindCountdown(state){
+    if (specCountdownRAF) cancelAnimationFrame(specCountdownRAF);
+
+    const t = state && state.timer;
+    const active = state && state.phase === 'active';
+    if (!t || !t.startAt || !t.duration || !active) {
+      specPhase.textContent = state?.phase || '—';
+      return;
+    }
+
+    const deadline = t.startAt + t.duration*1000;
+    function tick(){
+      const sec = Math.max(0, Math.ceil((deadline - Date.now())/1000));
+      specPhase.textContent = `${state.phase} – ${sec}s`;
+      if (sec > 0 && state.phase === 'active') {
+        specCountdownRAF = requestAnimationFrame(tick);
+      }
+    }
+    tick();
+  }
+
   function renderAll(state, teams){
-    specBindCountdown(state);
     specRoom.textContent = room;
-    specPhase.textContent = state.phase || '—';
-    specCorrect.textContent = state.correct || '—';
     specRound.textContent = state.number ?? '—';
+    specCorrect.textContent = state.correct || '—';
     specCorrect.classList.toggle('good', state.phase==='revealed' && !!state.correct);
 
+    specBindCountdown(state);
     spectatorGrid.innerHTML = renderTeamsHtml(teams, state);
     specTeamCount.textContent = Object.keys(teams||{}).length;
   }
 
-  // --- Freeze/thaw logic ---
   let frozenState = null;
   let frozenTeams = null;
   let teamsListener = null;
@@ -205,12 +188,11 @@ function specBindCountdown(state){
   function attachTeamsLive(){
     if(teamsListener) return;
     teamsListener = snap=>{
-      if(frozenState) return; // ignore live updates while frozen
+      if(frozenState) return;
       const teams = snap.val() || {};
-      // read current state to render consistently
       Promise.all([FBDB.get(settingsRef()), FBDB.get(roundRef())]).then(([s1,s2])=>{
-        const v = s1.val() || s2.val() || {};
-        renderAll(normalizeState(v), teams);
+        const v = normalizeState(s1.val() || s2.val() || {});
+        renderAll(v, teams);
       });
     };
     FBDB.onValue(teamsRef(), teamsListener);
@@ -224,7 +206,6 @@ function specBindCountdown(state){
   function handleStateUpdate(raw){
     const state = normalizeState(raw);
 
-    // If revealed: freeze snapshot (once) and stop live teams updates
     if(state.phase==='revealed' && state.correct){
       if(!frozenState){
         frozenState = state;
@@ -237,19 +218,11 @@ function specBindCountdown(state){
       return;
     }
 
-    // If not revealed (active/locked): thaw and show live
-    if(frozenState){
-      frozenState = null;
-      frozenTeams = null;
-    }
+    if(frozenState){ frozenState=null; frozenTeams=null; }
     attachTeamsLive();
-    // Also render once with current teams
-    FBDB.get(teamsRef()).then(ts=>{
-      renderAll(state, ts.val() || {});
-    });
+    FBDB.get(teamsRef()).then(ts=>{ renderAll(state, ts.val() || {}); });
   }
 
-  // Subscribe to both settings (new) and round (legacy)
   function subscribe(){
     if(!room) return;
     FBDB.onValue(settingsRef(), s=>{ if(s.exists()) handleStateUpdate(s.val()); });
@@ -262,13 +235,11 @@ function specBindCountdown(state){
     if(!room){ alert('Enter a room code'); return; }
     localStorage.setItem('mpd_room', room);
     specRoom.textContent = room;
-    // reset listeners by reloading page to new room (simplest)
     location.search = `?room=${encodeURIComponent(room)}`;
   }
   joinBtn.addEventListener('click', joinRoom);
 
   if(room){ subscribe(); }
 </script>
-
 </body>
 </html>
