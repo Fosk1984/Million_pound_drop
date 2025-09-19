@@ -129,8 +129,9 @@
 
   let currentBalance = 1000000;
   let settingsCache = null;
+  let prevPhase = null;       // track phase changes
 
-  // --- enable/disable inputs based on phase + lock (called from both listeners) ---
+  // --- enable/disable inputs based on phase + lock ---
   let teamLocked = false;
   function updateInputEnabled(){
     const allow = (settingsCache?.phase === 'active') && !teamLocked;
@@ -229,6 +230,18 @@
     FBDB.onValue(settingsRef(), s=>{
       const v = s.val() || {phase:'active'};
       settingsCache = v;
+
+      // PHASE TRANSITION: when host switches to 'active', proactively unlock UI
+      if (prevPhase !== 'active' && v.phase === 'active') {
+        teamLocked = false;                      // re-enable locally
+        aInput.value = 0; bInput.value = 0;     // clear local inputs
+        cInput.value = 0; dInput.value = 0;
+        refreshAllocUI();
+        // Nudge our own node to unlocked & cleared (safe if already done server-side)
+        try { FBDB.update(teamRef(), { locked:false, alloc:{A:0,B:0,C:0,D:0} }); } catch(e){}
+      }
+      prevPhase = v.phase;
+
       const phaseMsg = {active:'Allocations open – choose your split!', locked:'Locked – waiting for reveal…', revealed: v.correct?`Revealed: ${v.correct}`:'Revealed'};
       teamMsg.textContent = phaseMsg[v.phase] || '—';
       bindCountdown(v);
@@ -243,7 +256,7 @@
       aInput.value = alloc.A||0; bInput.value = alloc.B||0; cInput.value = alloc.C||0; dInput.value = alloc.D||0;
       refreshAllocUI();
 
-      teamLocked = !!t.locked;
+      teamLocked = !!t.locked; // keep in sync with DB
       updateInputEnabled();
     });
   }
