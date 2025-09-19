@@ -119,6 +119,28 @@
   const allocated=el('allocated'), remaining=el('remaining');
   const maxEvenBtn=el('maxEvenBtn'), clearBtn=el('clearBtn'), submitBtn=el('submitBtn');
   const teamMsg=el('teamMsg'), teamBalance=el('teamBalance'), timeLeft=el('timeLeft'), roundNum=el('roundNum');
+// === TEAM COUNTDOWN (only while phase === 'active') ===
+let countdownRAF = null;
+function bindCountdown(v){
+  if (countdownRAF) cancelAnimationFrame(countdownRAF);
+
+  const t = v && v.timer;
+  const active = v && v.phase === 'active';   // only tick during 'active'
+  if (!t || !t.startAt || !t.duration || !active) {
+    timeLeft.textContent = '—';
+    return;
+  }
+
+  const deadline = t.startAt + t.duration*1000;
+  function tick(){
+    const sec = Math.max(0, Math.ceil((deadline - Date.now())/1000));
+    timeLeft.textContent = `${sec}s`;
+    if (sec > 0 && v.phase === 'active') {
+      countdownRAF = requestAnimationFrame(tick);
+    }
+  }
+  tick();
+}
 
   // Minor UI: hide timer/round label meaning (we’ll repurpose text)
   roundNum.textContent = '—';
@@ -173,26 +195,26 @@
     subscribe();
   }
   joinBtn.addEventListener('click', joinRoom);
+async function submitAllocation(){
+  if(!room||!teamName){ alert('Join a room and set a team name first.'); return; }
+  const setSnap = await FBDB.get(settingsRef());
+  const settings = setSnap.val() || {};
+  if(settings.phase !== 'active'){ teamMsg.textContent = 'Allocations are closed.'; return; }
 
-  async function submitAllocation(){
-    if(!room||!teamName){ alert('Join a room and set a team name first.'); return; }
-    const setSnap = await FBDB.get(settingsRef());
-    const settings = setSnap.val() || {};
-    if(settings.phase !== 'active'){ teamMsg.textContent = 'Allocations are closed.'; return; }
+  const a=clamp(aInput.value,0,Infinity),
+        b=clamp(bInput.value,0,Infinity),
+        c=clamp(cInput.value,0,Infinity),
+        d=clamp(dInput.value,0,Infinity);
+  const sum = a+b+c+d;
+  if(sum > currentBalance){ alert('You cannot allocate more than your current balance.'); return; }
 
-    const a=clamp(aInput.value,0,Infinity),
-          b=clamp(bInput.value,0,Infinity),
-          c=clamp(cInput.value,0,Infinity),
-          d=clamp(dInput.value,0,Infinity);
-    const sum = a+b+c+d;
-    if(sum > currentBalance){ alert('You cannot allocate more than your current balance.'); return; }
-
-    await FBDB.update(FBDB.ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}`), {
-      alloc: {A:a,B:b,C:c,D:d},
-      lastSeen: Date.now()
-    });
-    teamMsg.textContent = 'Allocation saved.';
-  }
+  await FBDB.update(FBDB.ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}`), {
+    alloc: {A:a,B:b,C:c,D:d},
+    locked: true,                 // <-- mark this team as locked in
+    lastSeen: Date.now()
+  });
+  teamMsg.textContent = 'Locked in.';
+}
   submitBtn.addEventListener('click', submitAllocation);
 
   function subscribe(){
@@ -201,10 +223,12 @@
     // Settings: use phase to enable/disable inputs
     FBDB.onValue(settingsRef(), s=>{
       const v = s.val() || {phase:'active'};
+      settingsCache = v; 
       const disabled = v.phase !== 'active';
       [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = disabled);
       const phaseMsg = {active:'Allocations open – choose your split!', locked:'Locked – waiting for reveal…', revealed: v.correct?`Revealed: ${v.correct}`:'Revealed', undefined:'—'};
       teamMsg.textContent = phaseMsg[v.phase] || '—';
+      bindCountdown(v); 
     });
 
     // Your team
@@ -216,6 +240,9 @@
       const alloc = t.alloc || {A:0,B:0,C:0,D:0};
       aInput.value = alloc.A||0; bInput.value = alloc.B||0; cInput.value = alloc.C||0; dInput.value = alloc.D||0;
       refreshAllocUI();
+      const isLocked = !!t.locked;
+[aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = isLocked || (settingsCache?.phase!=='active'));
+
     });
   }
 
