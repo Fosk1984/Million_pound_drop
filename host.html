@@ -138,17 +138,25 @@
 
   function namesOf(obj){ return Object.keys(obj||{}); }
 
+  async function ensureRoom(){
+    if(!room) return;
+    roomLabel.textContent = room;
+    try{
+      const sSnap = await FBDB.get(settingsRef());
+      if(!sSnap.exists()){
+        await FBDB.set(settingsRef(), { number: 1, phase: 'between', correct: '', timer: null, createdAt: Date.now() });
+      }
+      subscribe();
+    }catch(e){
+      console.error(e); alert('Could not create/join room: '+(e?.message||e));
+    }
+  }
+
   async function joinRoom(){
     room = roomInput.value.trim();
     if(!room){ alert('Enter a room code'); return; }
     localStorage.setItem('mpd_room', room);
-    roomLabel.textContent = room;
-
-    // ensure settings exists
-    const sSnap = await FBDB.get(settingsRef());
-    const settings = sSnap.val() || { number: 1, phase: 'between', correct: '', timer: null, createdAt: Date.now() };
-    await FBDB.update(settingsRef(), settings);
-    subscribe();
+    await ensureRoom();
   }
   joinBtn.addEventListener('click', joinRoom);
 
@@ -157,7 +165,7 @@
 
   async function updateRoundNumber(){
     if(!room) return; const r = clamp(roundInput.value,1,999);
-    await FBDB.update(settingsRef(), { number: r });
+    await FBDB.update(settingsRef(), { number: r }).catch(()=>{});
   }
 
   async function doStart(){
@@ -179,7 +187,7 @@
     updates[`${roomPath()}/settings/phase`]   = 'active';
     updates[`${roomPath()}/settings/correct`] = '';
     updates[`${roomPath()}/settings/timer`]   = { startAt: Date.now(), duration: dur };
-    await FBDB.update(FBDB.ref(db), updates);
+    await FBDB.update(FBDB.ref(db), updates).catch(e=> alert('Start failed: '+(e?.message||e)) );
   }
   startRound.addEventListener('click', doStart);
 
@@ -191,14 +199,14 @@
       [`${roomPath()}/settings/number`]: r,
       [`${roomPath()}/settings/phase`]: 'between',
       [`${roomPath()}/settings/correct`]: '',
-      // do NOT change teams' locked or allocations here – they stay as they were
-    });
+      // keep teams as-is (locked state preserved)
+    }).catch(e=> alert('Next failed: '+(e?.message||e)) );
   }
   nextBtn.addEventListener('click', doNext);
 
   async function doReveal(){
     if(!room) return; const correct = revealSelect.value; if(!correct){ alert('Pick the correct option.'); return; }
-    await FBDB.update(settingsRef(), { phase:'revealed', correct });
+    await FBDB.update(settingsRef(), { phase:'revealed', correct }).catch(()=>{});
 
     // settle balances
     const snapshot = await FBDB.get(teamsRef());
@@ -212,7 +220,7 @@
         // keep them locked; mark dead if bankrupt
         if(next <= 0){ updates[`${roomPath()}/teams/${k}/dead`] = true; updates[`${roomPath()}/teams/${k}/locked`] = true; }
       });
-      await FBDB.update(FBDB.ref(db), updates);
+      await FBDB.update(FBDB.ref(db), updates).catch(e=> alert('Reveal failed: '+(e?.message||e)) );
     }
   }
   revealBtn.addEventListener('click', doReveal);
@@ -291,7 +299,8 @@
     });
   }
 
-  if(room){ roomLabel.textContent = room; subscribe(); }
+  // bootstrap: if launched with ?room=, auto-create & subscribe
+  if(room){ roomInput.value = room; ensureRoom(); }
 </script>
 </body>
 </html>
