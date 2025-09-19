@@ -3,59 +3,113 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Million Pound Drop – Spectator</title>
+  <title>Million Pound Drop – Spectator (Showtime)</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Chivo+Mono:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800;900&family=Chivo+Mono:wght@700&display=swap" rel="stylesheet">
+
   <style>
-    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--ink:#e6ecff}
-    *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
-    .wrap{max-width:1200px;margin:0 auto;padding:20px 16px 80px}
-    header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .title{font-weight:800;letter-spacing:.3px}.muted{color:var(--muted)}
-    .grid{display:grid;gap:16px}
-    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-    @media(max-width:1024px){.grid.cols-2{grid-template-columns:1fr}}
-    .card{position:relative;background:linear-gradient(180deg,#16214a 0,#0f1740 100%);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
-    .card .pad{padding:16px}
+    :root{
+      --bg:#070b1a; --ink:#e9efff; --muted:#8ea0d6;
+      --card:#0f1838; --card2:#122255;
+      --accent:#5eead4; --accent-2:#8b5cf6;
+      --good:#22c55e; --bad:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;color:var(--ink);
+      background:
+      radial-gradient(1200px 700px at 10% -10%,#1b2a62 0,#0b1020 55%),
+      radial-gradient(900px 600px at 120% 0%,#1d3566 0,#0b1020 55%),
+      radial-gradient(1000px 800px at -20% 120%,#0d1a3f 0,#0b1020 70%),
+      var(--bg);
+      overflow-x:hidden}
+
+    /* Ambient particles */
+    .bgSpark{position:fixed;inset:-10% -10% auto -10%;height:160vh;pointer-events:none;opacity:.35;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.28) 0, rgba(255,255,255,0) 60%),
+        radial-gradient(2px 2px at 80% 40%, rgba(255,255,255,.22) 0, rgba(255,255,255,0) 60%),
+        radial-gradient(2px 2px at 40% 80%, rgba(255,255,255,.2) 0, rgba(255,255,255,0) 60%);
+      animation: drift 36s linear infinite}
+    @keyframes drift{0%{transform:translateY(0)}100%{transform:translateY(-10%)} }
+
+    .wrap{max-width:1400px;margin:0 auto;padding:28px 16px 120px}
+    header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
+    .title{font-weight:900;font-size:34px;letter-spacing:.4px;text-shadow:0 1px 0 rgba(255,255,255,.06), 0 10px 28px rgba(139,92,246,.22)}
+    .title b{background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .muted{color:var(--muted)}
+
+    .grid{display:grid;gap:18px}
+    .cols-2{grid-template-columns:420px 1fr}
+    @media(max-width:1180px){.cols-2{grid-template-columns:1fr}}
+
+    .card{position:relative;background:linear-gradient(180deg,rgba(22,33,74,.75),rgba(15,23,64,.9));backdrop-filter: blur(6px);border:1px solid rgba(255,255,255,.12);border-radius:22px;box-shadow:0 22px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05);overflow:hidden}
+    .pad{padding:18px}
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    input,button{background:#0e1637;border:1px solid rgba(255,255,255,.12);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:15px}
-    button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%)}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
+    input,button{background:#0e1637;border:1px solid rgba(255,255,255,.14);color:var(--ink);border-radius:14px;padding:10px 12px;font-size:15px}
+    button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%);box-shadow:0 8px 22px rgba(0,0,0,.35)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(13,21,51,.85);border:1px solid rgba(255,255,255,.14);font-size:12px;color:var(--muted)}
+
+    /* LEFT COLUMN — SCOREBOARD */
+    .scoreHead{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+    .revealBadge{display:grid;place-items:center;width:110px;height:110px;border-radius:999px;background:radial-gradient(closest-side,rgba(255,255,255,.08),rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 0 18px rgba(255,255,255,.12), 0 12px 30px rgba(0,0,0,.4)}
+    .revealBadge span{font-family:"Chivo Mono",monospace;font-weight:900;font-size:42px;letter-spacing:1px}
+    .revealBadge.revealed{background:radial-gradient(closest-side, rgba(94,234,212,.15), rgba(139,92,246,.12));box-shadow:0 0 80px rgba(94,234,212,.25)}
+
+    .bigStats{display:flex;gap:10px;align-items:center}
+    .bigStats .round{font-size:40px;font-weight:900}
+    .phaseChip{font-weight:800;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#041316}
+
+    .totals{margin-top:12px;display:grid;gap:12px}
+    .totRow{display:grid;grid-template-columns:46px 1fr 140px;align-items:center;gap:12px}
+    .totBar{height:22px;background:rgba(11,20,52,.6);border:1px solid rgba(255,255,255,.12);border-radius:999px;overflow:hidden}
+    .totBar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.22),rgba(94,234,212,.95));transition:width .8s cubic-bezier(.22,1,.36,1)}
+    .totBar.good>span{background:linear-gradient(90deg,rgba(34,197,94,.25),rgba(34,197,94,.95))}
+    .totBar.bad>span{background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(239,68,68,.95))}
+
+    .leader{margin-top:14px}
+    .leaderRow{display:grid;grid-template-columns:56px 1fr 160px;gap:10px;align-items:center;padding:10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+    .medal{width:36px;height:36px;border-radius:999px;display:grid;place-items:center;font-weight:900}
+    .medal.g{background:linear-gradient(135deg,#ffd166,#f59e0b)}
+    .medal.s{background:linear-gradient(135deg,#cbd5e1,#94a3b8)}
+    .medal.b{background:linear-gradient(135deg,#fca5a5,#fb7185)}
+
+    /* RIGHT COLUMN — TEAMS GRID */
+    .teamsGrid{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(max-width:1180px){.teamsGrid{grid-template-columns:1fr}}
+    .teamCard{position:relative;background:linear-gradient(180deg,rgba(18,28,70,.8),rgba(10,18,52,.9));border:1px solid rgba(255,255,255,.1);border-radius:18px;box-shadow:0 14px 40px rgba(0,0,0,.45);overflow:hidden}
+    .teamCard .pad{padding:14px 16px}
     .barRow{display:grid;grid-template-columns:40px 1fr 120px;align-items:center;gap:10px}
     .bar{height:18px;background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
-    .bar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.2),rgba(94,234,212,.8));transition:width .5s ease}
+    .bar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.2),rgba(94,234,212,.9));transition:width .6s ease}
     .bar.bad>span{background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(239,68,68,.9))}
     .bar.good>span{background:linear-gradient(90deg,rgba(34,197,94,.25),rgba(34,197,94,.9))}
     .tray{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
     .tray .cell{background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;text-align:center}
-    .cell.drop{animation:drop 900ms ease forwards}
-    @keyframes drop{0%{transform:translateY(0);opacity:1}80%{transform:translateY(32px);opacity:.6}100%{transform:translateY(80px);opacity:0}}
 
     /* DEAD overlay */
-    .teamCard.dead .pad{filter:grayscale(1) brightness(.7); opacity:.6}
-    .deadMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:160px;line-height:1;color:rgba(239,68,68,.55);text-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
-    .deadLabel{position:absolute;top:8px;right:8px;background:rgba(239,68,68,.95);color:#fff;border-radius:999px;padding:6px 10px;font-weight:800;letter-spacing:.5px}
+    .teamCard.dead .pad{filter:grayscale(1) brightness(.65); opacity:.65}
+    .deadMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:170px;line-height:1;color:rgba(239,68,68,.55);text-shadow:0 8px 24px rgba(239,68,68,.35);pointer-events:none}
+    .deadLabel{position:absolute;top:8px;right:8px;background:rgba(239,68,68,.95);color:#fff;border-radius:999px;padding:6px 10px;font-weight:800;letter-spacing:.5px;box-shadow:0 6px 18px rgba(239,68,68,.35)}
 
-    /* === POLISH PACK === */
-    :root{ --bg:#070b1a; --card:#0f1838; --ink:#e9efff; --muted:#8ea0d6; --accent:#5eead4; --accent-2:#8b5cf6 }
-    .title, h3, h4{ text-shadow:0 1px 0 rgba(255,255,255,.06), 0 8px 24px rgba(139,92,246,.18) }
-    .card{ background:linear-gradient(180deg,rgba(22,33,74,.75),rgba(15,23,64,.85)); backdrop-filter: blur(6px); border:1px solid rgba(255,255,255,.12); box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05); border-radius:20px }
-    .pill{ border:1px solid rgba(255,255,255,.14); background:rgba(13,21,51,.85) }
-    .bar>span{ box-shadow:inset 0 0 8px rgba(255,255,255,.15) }
-    .bar.good>span{ box-shadow:0 0 18px rgba(34,197,94,.55) }
-    .bar.bad>span{ box-shadow:0 0 18px rgba(239,68,68,.55) }
-    .tray .cell{ background:rgba(11,20,52,.7); border-color:rgba(255,255,255,.14) }
+    /* Confetti */
+    .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+    .confetti span{position:absolute;width:10px;height:16px;background:var(--c);opacity:.95;transform:translateY(-20vh) rotate(0deg);animation:fall 1600ms ease-out forwards}
+    @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:1}}
   </style>
 </head>
 <body>
+<div class="bgSpark"></div>
 <div class="wrap">
   <header>
     <div>
-      <div class="title" style="font-size:28px">Million Pound Drop – Spectator</div>
-      <div class="muted">Read-only live board for the audience.</div>
+      <div class="title">💷 <b>Million</b> Pound Drop — Spectator</div>
+      <div class="muted">Live board for the audience. (Read‑only)</div>
     </div>
     <div class="row" style="max-width:700px">
       <input id="roomInput" placeholder="Room code (e.g. KEELE-2025)" />
@@ -63,35 +117,41 @@
     </div>
   </header>
 
-  <section class="card">
-    <div class="pad">
-      <div class="row" style="align-items:flex-end">
-        <div>
-          <div class="pill">Round</div>
-          <div class="title" id="specRound" style="font-size:24px">—</div>
+  <section class="grid cols-2">
+    <!-- LEFT: SCOREBOARD / TOTALS / LEADERBOARD -->
+    <div class="card scoreCard">
+      <div class="pad">
+        <div class="scoreHead">
+          <div class="bigStats">
+            <div class="pill">Round</div>
+            <div class="round" id="specRound">—</div>
+            <div class="phaseChip" id="specPhase">—</div>
+          </div>
+          <div class="revealBadge" id="revealBadge"><span id="specCorrect">?</span></div>
         </div>
-        <div>
-          <div class="pill">Phase</div>
-          <div class="title" id="specPhase" style="font-size:24px">—</div>
-        </div>
-        <div>
-          <div class="pill">Correct</div>
-          <div class="title" id="specCorrect" style="font-size:24px">—</div>
-        </div>
-      </div>
-      <div class="pill" style="margin-top:8px">Room: <b id="specRoom">(not set)</b> · Teams: <b id="specTeamCount">0</b></div>
-    </div>
-  </section>
+        <div class="pill" style="margin-top:10px">Room: <b id="specRoom">(not set)</b> · Teams: <b id="specTeamCount">0</b> · Alive: <b id="aliveCount">0</b></div>
 
-  <section class="card" style="margin-top:16px">
-    <div class="pad">
-      <h3 style="margin:0 0 8px">Teams</h3>
-      <div id="spectatorGrid" class="grid cols-2"></div>
+        <h3 style="margin:14px 0 6px">Totals</h3>
+        <div class="totals" id="totals"></div>
+
+        <h3 class="leader" style="margin:14px 0 6px">Leaderboard</h3>
+        <div id="leaderboard"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: TEAMS GRID -->
+    <div class="card">
+      <div class="pad">
+        <h3 style="margin:0 0 8px">Teams</h3>
+        <div id="spectatorGrid" class="teamsGrid"></div>
+      </div>
     </div>
   </section>
 </div>
+<div id="confetti" class="confetti"></div>
 
 <script type="module">
+  // Firebase config
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -109,53 +169,111 @@
   const app = FBApp.initializeApp(firebaseConfig);
   const db  = FBDB.getDatabase(app);
 
-  const el=id=>document.getElementById(id);
-  const money=n=>'£'+Number(n||0).toLocaleString();
+  const $ = id=>document.getElementById(id);
+  const money = n => '£' + Number(n||0).toLocaleString();
 
   let room = new URLSearchParams(location.search).get('room') || localStorage.getItem('mpd_room') || '';
-  const roomInput=el('roomInput'); const joinBtn=el('joinBtn');
-  const specRoom=el('specRoom'); const specRound=el('specRound'); const specPhase=el('specPhase'); const specCorrect=el('specCorrect'); const specTeamCount=el('specTeamCount');
-  const grid=el('spectatorGrid');
+  const roomInput=$('roomInput'); const joinBtn=$('joinBtn');
+  const specRoom=$('specRoom'); const specRound=$('specRound'); const specPhase=$('specPhase'); const specCorrect=$('specCorrect');
+  const specTeamCount=$('specTeamCount'); const aliveCount=$('aliveCount'); const revealBadge=$('revealBadge');
+  const totalsEl=$('totals'); const leaderboardEl=$('leaderboard'); const grid=$('spectatorGrid');
+  const confetti=$('confetti');
 
-  roomInput.value = room;
-  if(room) specRoom.textContent = room;
+  roomInput.value = room; if(room) specRoom.textContent = room;
 
   const roomPath = ()=>`rooms/${room}`;
   const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
   const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
 
-  function renderTeamsHtml(teams, state){
-    const names = Object.keys(teams||{}).sort();
+  // Confetti burst on reveal
+  let lastPhase = '';
+  function burst(){
+    confetti.innerHTML = '';
+    const colors = ['#5eead4','#8b5cf6','#22c55e','#fde047','#fb7185'];
+    for(let i=0;i<80;i++){
+      const s = document.createElement('span');
+      s.style.left = Math.random()*100 + 'vw';
+      s.style.top = (-10 - Math.random()*30) + 'vh';
+      s.style.setProperty('--c', colors[Math.floor(Math.random()*colors.length)]);
+      s.style.transform = `translateY(${-20 - Math.random()*40}vh) rotate(${Math.random()*360}deg)`;
+      s.style.animationDelay = (Math.random()*300)+'ms';
+      confetti.appendChild(s);
+    }
+    setTimeout(()=> confetti.innerHTML='', 1800);
+  }
+
+  function renderTotals(teams, state){
+    const allocSum = {A:0,B:0,C:0,D:0};
+    const names = Object.keys(teams||{});
+    names.forEach(k=>{
+      const a = (teams[k]?.alloc) || {A:0,B:0,C:0,D:0};
+      allocSum.A += Number(a.A)||0; allocSum.B += Number(a.B)||0; allocSum.C += Number(a.C)||0; allocSum.D += Number(a.D)||0;
+    });
+    const totalAll = Math.max(1, allocSum.A+allocSum.B+allocSum.C+allocSum.D);
     const correct = state.correct || '';
     const revealed = state.phase==='revealed' && !!correct;
-    return names.map(key=>{
-      const t = teams[key] || {};
-      const name = t.name || decodeURIComponent(key) || key;
-      const alloc = t.alloc || {A:0,B:0,C:0,D:0};
-      const bal   = Number(t.balance != null ? t.balance : 1000000);
-      const isDead = t.dead === true || bal <= 0;
-      const total = (Number(alloc.A)||0)+(Number(alloc.B)||0)+(Number(alloc.C)||0)+(Number(alloc.D)||0);
-      const pct = x => total>0 ? Math.round((Number(x)/Math.max(total,1))*100) : 0;
-      const barCls = opt => revealed ? (opt===correct? 'bar good':'bar bad') : 'bar';
-      const dropClass = opt => (revealed && opt!==correct)? ' drop':'';
 
-      return `
-        <div class="card teamCard ${isDead?'dead':''}"><div class="pad">
-          <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${name}</h4><div class="pill">Balance: ${money(bal)} ${isDead? '· DEAD':''}</div></div>
-          <div class="barRow"><div>A</div><div class="${barCls('A')}"><span style="width:${pct(alloc.A)}%"></span></div><div>${money(alloc.A||0)}</div></div>
-          <div class="barRow"><div>B</div><div class="${barCls('B')}"><span style="width:${pct(alloc.B)}%"></span></div><div>${money(alloc.B||0)}</div></div>
-          <div class="barRow"><div>C</div><div class="${barCls('C')}"><span style="width:${pct(alloc.C)}%"></span></div><div>${money(alloc.C||0)}</div></div>
-          <div class="barRow"><div>D</div><div class="${barCls('D')}"><span style="width:${pct(alloc.D)}%"></span></div><div>${money(alloc.D||0)}</div></div>
+    const makeRow = (label,val)=>{
+      const pct = Math.round((val/totalAll)*100);
+      const cls = revealed ? (label===correct? 'totBar good' : 'totBar bad') : 'totBar';
+      return `<div class="totRow"><div class="pill" style="text-align:center;font-weight:800">${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div style="text-align:right;font-variant-numeric:tabular-nums">${money(val)} · ${pct}%</div></div>`;
+    };
+
+    totalsEl.innerHTML = makeRow('A', allocSum.A) + makeRow('B', allocSum.B) + makeRow('C', allocSum.C) + makeRow('D', allocSum.D);
+  }
+
+  function renderLeaderboard(teams){
+    const arr = Object.keys(teams||{}).map(k=>{
+      const t=teams[k]||{}; return {name:t.name||decodeURIComponent(k)||k, bal:Number(t.balance??1000000), dead: !!t.dead};
+    }).sort((a,b)=> b.bal - a.bal).slice(0,6);
+
+    leaderboardEl.innerHTML = arr.map((t,i)=>{
+      const m = i===0?'g':i===1?'s':'b';
+      const medal = `<div class="medal ${i<3?m:''}">${i+1}</div>`;
+      const name = `<div style="font-weight:800;opacity:${t.dead?.8:.1}">${t.name}${t.dead?' <span class="pill" style="margin-left:6px">ELIM</span>':''}</div>`;
+      const bal = `<div style="text-align:right;font-weight:800">${money(t.bal)}</div>`;
+      return `<div class="leaderRow">${medal}${name}${bal}</div>`;
+    }).join('');
+  }
+
+  function teamCardHtml(key, t, state){
+    const name = t.name || decodeURIComponent(key) || key;
+    const alloc = t.alloc || {A:0,B:0,C:0,D:0};
+    const bal   = Number(t.balance != null ? t.balance : 1000000);
+    const isDead = t.dead === true || bal <= 0;
+    const total = (Number(alloc.A)||0)+(Number(alloc.B)||0)+(Number(alloc.C)||0)+(Number(alloc.D)||0);
+    const pct = x => total>0 ? Math.round((Number(x)/Math.max(total,1))*100) : 0;
+    const correct = state.correct || '';
+    const revealed = state.phase==='revealed' && !!correct;
+    const barCls = opt => revealed ? (opt===correct? 'bar good':'bar bad') : 'bar';
+
+    return `
+      <div class="teamCard ${isDead?'dead':''}">
+        <div class="pad">
+          <div class="row" style="justify-content:space-between;align-items:baseline"><h4 style="margin:0">${name}</h4><div class="pill">Balance: ${money(bal)} ${isDead? '· DEAD':''}</div></div>
+          <div class="barRow"><div>A</div><div class="${barCls('A')}"><span style="width:${pct(alloc.A)}%"></span></div><div style="text-align:right">${money(alloc.A||0)}</div></div>
+          <div class="barRow"><div>B</div><div class="${barCls('B')}"><span style="width:${pct(alloc.B)}%"></span></div><div style="text-align:right">${money(alloc.B||0)}</div></div>
+          <div class="barRow"><div>C</div><div class="${barCls('C')}"><span style="width:${pct(alloc.C)}%"></span></div><div style="text-align:right">${money(alloc.C||0)}</div></div>
+          <div class="barRow"><div>D</div><div class="${barCls('D')}"><span style="width:${pct(alloc.D)}%"></span></div><div style="text-align:right">${money(alloc.D||0)}</div></div>
           <div class="tray" style="margin-top:8px">
-            <div class="cell${dropClass('A')}">A: ${money(alloc.A||0)}</div>
-            <div class="cell${dropClass('B')}">B: ${money(alloc.B||0)}</div>
-            <div class="cell${dropClass('C')}">C: ${money(alloc.C||0)}</div>
-            <div class="cell${dropClass('D')}">D: ${money(alloc.D||0)}</div>
+            <div class="cell">A: ${money(alloc.A||0)}</div>
+            <div class="cell">B: ${money(alloc.B||0)}</div>
+            <div class="cell">C: ${money(alloc.C||0)}</div>
+            <div class="cell">D: ${money(alloc.D||0)}</div>
           </div>
         </div>
         ${isDead? '<div class="deadMark" aria-hidden="true">✕</div><div class="deadLabel">ELIMINATED</div>':''}
-        </div>`;
-    }).join('');
+      </div>`;
+  }
+
+  function renderTeams(teams, state){
+    // Sort by balance desc, then name
+    const keys = Object.keys(teams||{}).sort((a,b)=>{
+      const ta=teams[a]||{}, tb=teams[b]||{};
+      const ba=Number(ta.balance??0), bb=Number(tb.balance??0);
+      if(bb!==ba) return bb-ba; return (ta.name||a).localeCompare(tb.name||b);
+    });
+    grid.innerHTML = keys.map(k=> teamCardHtml(k, teams[k]||{}, state)).join('');
   }
 
   function subscribe(){
@@ -165,14 +283,19 @@
       specRound.textContent = v.number || '—';
       specPhase.textContent = v.phase || '—';
       specCorrect.textContent = v.correct || '—';
+      revealBadge.classList.toggle('revealed', v.phase==='revealed');
+      if(lastPhase !== 'revealed' && v.phase === 'revealed'){ burst(); }
+      lastPhase = v.phase || '';
       FBDB.get(teamsRef()).then(ts=>{
         const teams = ts.val()||{}; specTeamCount.textContent = Object.keys(teams).length;
-        grid.innerHTML = renderTeamsHtml(teams, v);
+        const alive = Object.values(teams).filter(t=> !(t?.dead===true || Number(t?.balance||0)<=0)).length; aliveCount.textContent = alive;
+        renderTotals(teams, v); renderLeaderboard(teams); renderTeams(teams, v);
       });
     });
     FBDB.onValue(teamsRef(), t=>{
       const teams = t.val()||{}; specTeamCount.textContent = Object.keys(teams).length;
-      FBDB.get(settingsRef()).then(s=>{ grid.innerHTML = renderTeamsHtml(teams, s.val()||{}); });
+      const alive = Object.values(teams).filter(tt=> !(tt?.dead===true || Number(tt?.balance||0)<=0)).length; aliveCount.textContent = alive;
+      FBDB.get(settingsRef()).then(s=>{ const v=s.val()||{}; renderTotals(teams, v); renderLeaderboard(teams); renderTeams(teams, v); });
     });
   }
 
