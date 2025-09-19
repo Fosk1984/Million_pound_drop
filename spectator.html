@@ -6,6 +6,14 @@
   <title>Million Pound Drop – Spectator</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
   <style>
+
+    /* Highlight the correct answer */
+.bar.good{outline:2px solid #22c55e;box-shadow:0 0 0 2px #16a34a inset,0 0 18px rgba(34,197,94,.35)}
+.tray .cell.correct{border-color:#22c55e;box-shadow:0 0 18px rgba(34,197,94,.45);transform:scale(1.03)}
+#specCorrect.good{display:inline-block;padding:4px 10px;border-radius:999px;background:linear-gradient(180deg,#22c55e,#16a34a);color:#001b18;box-shadow:0 0 18px rgba(34,197,94,.45)}
+@keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
+#specCorrect.good{animation:pulse 1.2s ease-in-out 3}
+
     :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--ink:#e6ecff}
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
@@ -74,6 +82,7 @@
 </div>
 
 <script type="module">
+  // Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -84,78 +93,94 @@
     appId: "1:866523395054:web:dbbcd7c1b281cac32994ff",
     measurementId: "G-6VRXQSGG4H"
   };
-
   import * as FBApp from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import * as FBDB  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-
   const app = FBApp.initializeApp(firebaseConfig);
   const db  = FBDB.getDatabase(app);
 
+  // Els
   const el=id=>document.getElementById(id);
   const money=n=>'£'+Number(n||0).toLocaleString();
-
   let room = new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
   const roomInput=el('roomInput'), joinBtn=el('joinBtn');
   const spectatorGrid=el('spectatorGrid');
-  const specRoom=el('specRoom'), specTeamCount=el('specTeamCount'), specRound=el('specRound'), specPhase=el('specPhase'), specCorrect=el('specCorrect');
+  const specRoom=el('specRoom'), specTeamCount=el('specTeamCount');
+  const specRound=el('specRound'), specPhase=el('specPhase'), specCorrect=el('specCorrect');
+  roomInput.value=room; if(room) specRoom.textContent=room;
 
-  roomInput.value = room; if(room) specRoom.textContent = room;
-
+  // Refs (support both schemas)
   const roomPath = ()=>`rooms/${room}`;
-  const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
+  const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);    // new schema (no rounds)
+  const roundRef  =()=> FBDB.ref(db, roomPath()+`/round`);        // legacy schema (with rounds)
   const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
 
-  function teamBars(label, tokens, pct, cls){
-    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${money(tokens)}</div></div>`;
+  // Normalize state (works for both schemas)
+  const normalizeState = (v)=>({
+    number: v?.number ?? 1,
+    phase:  v?.phase  ?? 'active',
+    correct:v?.correct ?? ''
+  });
+
+  // Render helpers
+  function teamBars(label, val, pct, cls){
+    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${money(val)}</div></div>`;
   }
-  function renderTeamsHtml(teams, settings){
+  function renderTeamsHtml(teams, state){
     const names = Object.keys(teams||{}).sort();
-    const correct = settings.correct || '';
+    const correct = state.correct || '';
+    const isRevealed = state.phase==='revealed' && !!correct;
     return names.map(name=>{
       const t = teams[name] || {};
-      const alloc = t.alloc || {A:0,B:0,C:0,D:0};
+      // support both schemas: new (t.alloc £), legacy (t.allocations[state.number] tokens)
+      const r = state.number || 1;
+      const alloc = t.alloc || ((t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0});
       const total = Number(alloc.A||0)+Number(alloc.B||0)+Number(alloc.C||0)+Number(alloc.D||0);
+      const bal   = Number((t.balance!=null ? t.balance : (t.balanceTokens!=null ? t.balanceTokens*1000 : 1000000)));
       const pct = x => total>0 ? Math.round((Number(x)/Math.max(total,1))*100) : 0;
-      const bal = Number(t.balance != null ? t.balance : 1000000);
-      const dropClass = opt => (settings.phase==='revealed' && correct && opt!==correct)? ' drop':'';
-      const barCls = opt => (settings.phase==='revealed' && correct) ? (opt===correct?'bar good':'bar bad') : 'bar';
+      const dropClass = opt => (isRevealed && opt!==correct)? ' drop':'';
+      const cellCorrect = opt => (isRevealed && opt===correct)? ' correct':'';
+      const barCls = opt => isRevealed ? (opt===correct? 'bar good' : 'bar bad') : 'bar';
 
       return `
-      <div class="card"><div class="pad">
-        <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${money(bal)}</div></div>
-        ${teamBars('A', alloc.A||0, pct(alloc.A||0), barCls('A'))}
-        ${teamBars('B', alloc.B||0, pct(alloc.B||0), barCls('B'))}
-        ${teamBars('C', alloc.C||0, pct(alloc.C||0), barCls('C'))}
-        ${teamBars('D', alloc.D||0, pct(alloc.D||0), barCls('D'))}
-        <div class="tray" style="margin-top:8px">
-          <div class="cell${dropClass('A')}">A: ${alloc.A||0}</div>
-          <div class="cell${dropClass('B')}">B: ${alloc.B||0}</div>
-          <div class="cell${dropClass('C')}">C: ${alloc.C||0}</div>
-          <div class="cell${dropClass('D')}">D: ${alloc.D||0}</div>
-        </div>
-      </div></div>`;
+        <div class="card"><div class="pad">
+          <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${money(bal)}</div></div>
+          ${teamBars('A', alloc.A||0, pct(alloc.A||0), barCls('A'))}
+          ${teamBars('B', alloc.B||0, pct(alloc.B||0), barCls('B'))}
+          ${teamBars('C', alloc.C||0, pct(alloc.C||0), barCls('C'))}
+          ${teamBars('D', alloc.D||0, pct(alloc.D||0), barCls('D'))}
+          <div class="tray" style="margin-top:8px">
+            <div class="cell${dropClass('A')}${cellCorrect('A')}">A: ${money(alloc.A||0)}</div>
+            <div class="cell${dropClass('B')}${cellCorrect('B')}">B: ${money(alloc.B||0)}</div>
+            <div class="cell${dropClass('C')}${cellCorrect('C')}">C: ${money(alloc.C||0)}</div>
+            <div class="cell${dropClass('D')}${cellCorrect('D')}">D: ${money(alloc.D||0)}</div>
+          </div>
+        </div></div>`;
     }).join('');
   }
 
-  function subscribe(){
-    if(!room) return;
-    FBDB.onValue(settingsRef(), s=>{
-      const v = s.val() || {phase:'active', correct:''};
-      specRoom.textContent = room;
-      specRound.textContent = '—';
-      specPhase.textContent = v.phase || '—';
-      specCorrect.textContent = v.correct || '—';
-      FBDB.get(teamsRef()).then(ts=>{
-        const teams = ts.val() || {};
-        specTeamCount.textContent = Object.keys(teams).length;
-        spectatorGrid.innerHTML = renderTeamsHtml(teams, v);
-      });
-    });
-    FBDB.onValue(teamsRef(), ts=>{
+  function renderAll(state){
+    specPhase.textContent = state.phase || '—';
+    specCorrect.textContent = state.correct || '—';
+    specRound.textContent = state.number ?? '—';
+    specCorrect.classList.toggle('good', state.phase==='revealed' && !!state.correct);
+
+    FBDB.get(teamsRef()).then(ts=>{
       const teams = ts.val() || {};
       specTeamCount.textContent = Object.keys(teams).length;
-      FBDB.get(settingsRef()).then(s=>{
-        spectatorGrid.innerHTML = renderTeamsHtml(teams, s.val() || {phase:'active', correct:''});
+      spectatorGrid.innerHTML = renderTeamsHtml(teams, state);
+    });
+  }
+
+  // Subscribe (both schemas; whichever updates will render)
+  function subscribe(){
+    if(!room) return;
+    FBDB.onValue(settingsRef(), s => { const v = s.val(); if(v) renderAll(normalizeState(v)); });
+    FBDB.onValue(roundRef(),    s => { const v = s.val(); if(v) renderAll(normalizeState(v)); });
+    FBDB.onValue(teamsRef(),    ts=> {
+      // re-render with latest state when teams change
+      Promise.all([FBDB.get(settingsRef()), FBDB.get(roundRef())]).then(([s1,s2])=>{
+        const v = s1.val() || s2.val() || {phase:'active',correct:'',number:1};
+        renderAll(normalizeState(v));
       });
     });
   }
