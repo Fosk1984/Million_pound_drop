@@ -149,25 +149,33 @@
   joinBtn.addEventListener('click', joinRoom);
 
   // Host actions
- async function openAlloc(){
+async function openAlloc(){
   if(!room) return;
+  const dur = Math.max(0, Number(timerInput.value) || 0);
 
-  // Clear allocations for all teams for the next question
   const snap = await FBDB.get(teamsRef());
   const teams = snap.val() || {};
   const updates = {};
   Object.keys(teams).forEach(k=>{
-    updates[`${roomPath()}/teams/${k}/alloc`] = {A:0,B:0,C:0,D:0};
+    updates[`${roomPath()}/teams/${k}/alloc`]  = {A:0,B:0,C:0,D:0};
+    updates[`${roomPath()}/teams/${k}/locked`] = false; // reset locks
   });
 
-  // Reopen allocations
-  updates[`${roomPath()}/settings/phase`] = 'active';
+  updates[`${roomPath()}/settings/phase`]   = 'active';
   updates[`${roomPath()}/settings/correct`] = '';
+  updates[`${roomPath()}/settings/timer`]   = { startAt: Date.now(), duration: dur };
 
   await FBDB.update(FBDB.ref(db), updates);
 }
 
-  async function lockAlloc(){ if(!room) return; await FBDB.update(settingsRef(), { phase: 'locked' }); }
+
+ async function lockAlloc(){
+  if(!room) return;
+  await FBDB.update(FBDB.ref(db), {
+    [`${roomPath()}/settings/phase`]: 'locked',
+    [`${roomPath()}/settings/timer`]: { startAt: 0, duration: 0 }
+  });
+}
 
 async function reveal(){
   if(!room) return;
@@ -192,10 +200,11 @@ async function reveal(){
     // IMPORTANT: do NOT clear t.alloc here anymore
   });
 
-  updates[`${roomPath()}/settings/phase`] = 'revealed';
-  updates[`${roomPath()}/settings/correct`] = correct;
+ updates[`${roomPath()}/settings/phase`]   = 'revealed';
+updates[`${roomPath()}/settings/correct`] = correct;
+updates[`${roomPath()}/settings/timer`]   = { startAt: 0, duration: 0 }; // stop
+await FBDB.update(FBDB.ref(db), updates);
 
-  await FBDB.update(FBDB.ref(db), updates);
 
   // Remove any auto-reopen code here (we want the revealed screen to stay up)
   // e.g. delete: setTimeout(()=> FBDB.update(settingsRef(), { phase: 'active', correct: '' }), 900);
