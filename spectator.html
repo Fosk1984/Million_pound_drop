@@ -92,6 +92,11 @@
     .tray{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
     .tray .cell{background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;text-align:center}
 
+    /* Emphasised team header */
+    .teamName{margin:0;font-size:28px;font-weight:900;letter-spacing:.4px;text-shadow:0 2px 0 rgba(255,255,255,.06),0 10px 28px rgba(139,92,246,.22)}
+    .balanceChip{font-family:"Chivo Mono",monospace;font-size:22px;font-weight:900;padding:8px 14px;border-radius:14px;background:linear-gradient(135deg,var(--accent) 0%,#22d3ee 45%,var(--accent-2) 100%);color:#041316;border:none;box-shadow:0 8px 26px rgba(94,234,212,.25), inset 0 1px 0 rgba(255,255,255,.3);display:inline-flex;align-items:center;gap:8px}
+    .balanceChip small{opacity:.85;font-weight:800;letter-spacing:.3px}
+
     /* DEAD overlay */
     .teamCard.dead .pad{filter:grayscale(1) brightness(.65); opacity:.65}
     .deadMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:170px;line-height:1;color:rgba(239,68,68,.55);text-shadow:0 8px 24px rgba(239,68,68,.35);pointer-events:none}
@@ -101,6 +106,10 @@
     .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}
     .confetti span{position:absolute;width:10px;height:16px;background:var(--c);opacity:.95;transform:translateY(-20vh) rotate(0deg);animation:fall 1600ms ease-out forwards}
     @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:1}}
+
+    /* Leaderboard emphasis */
+    .leaderRow .name{font-size:18px;font-weight:900}
+    .leaderRow .bal{font-family:"Chivo Mono",monospace;font-size:20px;font-weight:900}
   </style>
 </head>
 <body>
@@ -230,8 +239,8 @@
     leaderboardEl.innerHTML = arr.map((t,i)=>{
       const m = i===0?'g':i===1?'s':'b';
       const medal = `<div class="medal ${i<3?m:''}">${i+1}</div>`;
-      const name = `<div style="font-weight:800;opacity:${t.dead?.8:.1}">${t.name}${t.dead?' <span class="pill" style="margin-left:6px">ELIM</span>':''}</div>`;
-      const bal = `<div style="text-align:right;font-weight:800">${money(t.bal)}</div>`;
+      const name = `<div class="name">${t.name}${t.dead?' <span class="pill" style="margin-left:6px">ELIM</span>':''}</div>`;
+      const bal  = `<div class="bal" style="text-align:right">${money(t.bal)}</div>`;
       return `<div class="leaderRow">${medal}${name}${bal}</div>`;
     }).join('');
   }
@@ -250,7 +259,10 @@
     return `
       <div class="teamCard ${isDead?'dead':''}">
         <div class="pad">
-          <div class="row" style="justify-content:space-between;align-items:baseline"><h4 style="margin:0">${name}</h4><div class="pill">Balance: ${money(bal)} ${isDead? '· DEAD':''}</div></div>
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <h4 class="teamName">${name}</h4>
+            <div class="balanceChip"><small>Balance</small> ${money(bal)} ${isDead? '· DEAD':''}</div>
+          </div>
           <div class="barRow"><div>A</div><div class="${barCls('A')}"><span style="width:${pct(alloc.A)}%"></span></div><div style="text-align:right">${money(alloc.A||0)}</div></div>
           <div class="barRow"><div>B</div><div class="${barCls('B')}"><span style="width:${pct(alloc.B)}%"></span></div><div style="text-align:right">${money(alloc.B||0)}</div></div>
           <div class="barRow"><div>C</div><div class="${barCls('C')}"><span style="width:${pct(alloc.C)}%"></span></div><div style="text-align:right">${money(alloc.C||0)}</div></div>
