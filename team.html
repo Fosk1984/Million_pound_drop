@@ -5,10 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Million Pound Drop – Team</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Chivo+Mono:wght@700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--ink:#e6ecff}
+    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--ink:#e6ecff}
     *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
+    body{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
     .wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
     header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
     .title{font-weight:800;letter-spacing:.3px}.muted{color:var(--muted)}
@@ -21,15 +24,23 @@
     button.ghost{background:transparent}
     .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
     .grid{display:grid;gap:12px}
+    .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
     .grid.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-    @media(max-width:720px){.grid.cols-4{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:720px){.grid.cols-2{grid-template-columns:1fr}.grid.cols-4{grid-template-columns:repeat(2,1fr)}}
     .big{font-size:28px;font-weight:800}
 
-    /* Game Over overlay */
-    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.85);z-index:1000}
-    .overlay .panel{background:linear-gradient(180deg,#1a234d,#0e1637);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:28px 22px;box-shadow:0 18px 50px rgba(0,0,0,.55);text-align:center;max-width:520px}
-    .overlay .title{font-size:44px;font-weight:900;color:#ef4444;text-shadow:0 2px 12px rgba(239,68,68,.35)}
-    .overlay .sub{color:#cbd5e1;margin-top:6px}
+    /* === POLISH PACK === */
+    :root{ --bg:#070b1a; --card:#0f1838; --ink:#e9efff; --muted:#8ea0d6; --accent:#5eead4; --accent-2:#8b5cf6 }
+    .title, h3, h4{ text-shadow:0 1px 0 rgba(255,255,255,.06), 0 8px 24px rgba(139,92,246,.18) }
+    .card{ background:linear-gradient(180deg,rgba(22,33,74,.75),rgba(15,23,64,.85)); backdrop-filter: blur(6px); border:1px solid rgba(255,255,255,.12); box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05); border-radius:20px }
+    button{ border-radius:14px; transition:transform .15s ease, box-shadow .2s ease, filter .2s ease; box-shadow:0 8px 20px rgba(0,0,0,.35) }
+    button:hover{ transform:translateY(-1px); filter:brightness(1.05) }
+    button:active{ transform:translateY(0) }
+    button.primary{ background:linear-gradient(135deg,var(--accent) 0%, #22d3ee 40%, var(--accent-2) 100%); color:#041316; font-weight:800; border:none; text-shadow:0 1px 0 rgba(255,255,255,.25) }
+    .pill{ border:1px solid rgba(255,255,255,.14); background:rgba(13,21,51,.85) }
+    .timerRing{ --pct:0; width:82px; height:82px; border-radius:999px; display:inline-grid; place-items:center; position:relative; background: conic-gradient(var(--accent) calc(var(--pct)*1%), rgba(255,255,255,.08) 0); box-shadow:0 0 28px rgba(94,234,212,.2) inset, 0 0 10px rgba(94,234,212,.25) }
+    .timerRing::before{ content:""; position:absolute; inset:6px; border-radius:inherit; background:#0b1020; box-shadow:inset 0 0 0 1px rgba(255,255,255,.06) }
+    .timerRing span{ position:relative; font-weight:800; font-family:"Chivo Mono", monospace; font-size:20px }
   </style>
 </head>
 <body>
@@ -51,11 +62,11 @@
       <div class="row" style="align-items:flex-end">
         <div>
           <div class="pill">Round</div>
-          <div class="big" id="roundNum">—</div>
+          <div class="big" id="roundNum">1</div>
         </div>
         <div>
           <div class="pill">Time left</div>
-          <div class="big" id="timeLeft">—</div>
+          <div id="timeLeft" class="timerRing"><span data-s>—</span></div>
         </div>
         <div style="margin-left:auto;text-align:right">
           <div class="pill">Your Balance</div>
@@ -63,7 +74,7 @@
         </div>
       </div>
 
-      <div class="pill" style="margin:8px 0">Allocated: £<span id="allocated">0</span> · Remaining: £<span id="remaining">1,000,000</span></div>
+      <div class="pill" style="margin:8px 0">Allocated: <span id="allocated">0</span> / 100% · Remaining: <span id="remaining">100%</span></div>
 
       <div class="grid cols-4">
         <div>
@@ -87,19 +98,11 @@
       <div class="row" style="margin-top:8px">
         <button id="maxEvenBtn" type="button">Split Evenly</button>
         <button id="clearBtn" type="button" class="ghost">Clear</button>
-        <button id="submitBtn" type="button" class="primary" disabled>Lock In</button>
+        <button id="submitBtn" type="button" class="primary">Lock In</button>
       </div>
       <div class="muted" id="teamMsg" style="margin-top:8px">Waiting for the host to start…</div>
     </div>
   </section>
-</div>
-
-<!-- Game Over overlay -->
-<div id="gameOverOverlay" class="overlay" role="dialog" aria-live="polite" aria-label="Game over">
-  <div class="panel">
-    <div class="title">Game over!!</div>
-    <div class="sub">Your balance has dropped to £0 or you ran out of time without locking in. Please watch along on the main screen.</div>
-  </div>
 </div>
 
 <script type="module">
@@ -121,195 +124,105 @@
   const db  = FBDB.getDatabase(app);
 
   const el=id=>document.getElementById(id);
-  const money=n=>'£'+Number(n||0).toLocaleString();
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
+  const money=n=>'£'+Number(n||0).toLocaleString();
 
-  let room = new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
-  let teamName = localStorage.getItem('mpd_team') || '';
+  let room=new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
+  let teamName=localStorage.getItem('mpd_team')||'';
 
-  const roomInput=el('roomInput'), teamInput=el('teamInput'), joinBtn=el('joinBtn');
-  const aInput=el('aInput'), bInput=el('bInput'), cInput=el('cInput'), dInput=el('dInput');
-  const allocated=el('allocated'), remaining=el('remaining');
-  const maxEvenBtn=el('maxEvenBtn'), clearBtn=el('clearBtn'), submitBtn=el('submitBtn');
-  const teamMsg=el('teamMsg'), teamBalance=el('teamBalance'), timeLeft=el('timeLeft'), roundNum=el('roundNum');
-  const overlay=el('gameOverOverlay');
+  const roomInput=el('roomInput'); const teamInput=el('teamInput'); const joinBtn=el('joinBtn');
+  const aInput=el('aInput'); const bInput=el('bInput'); const cInput=el('cInput'); const dInput=el('dInput');
+  const allocated=el('allocated'); const remaining=el('remaining');
+  const maxEvenBtn=el('maxEvenBtn'); const clearBtn=el('clearBtn'); const submitBtn=el('submitBtn');
+  const teamMsg=el('teamMsg'); const teamBalance=el('teamBalance'); const timeLeft=el('timeLeft'); const roundNum=el('roundNum');
 
-  roundNum.textContent = '—';
   roomInput.value=room; teamInput.value=teamName;
 
-  const roomPath = ()=>`rooms/${room}`;
-  const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
-  const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
-  const teamRef   =()=> FBDB.ref(db, roomPath()+`/teams/${encodeURIComponent(teamName)}`);
+  const roomPath=()=>`rooms/${room}`;
+  const settingsRef=()=>FBDB.ref(db, roomPath()+`/settings`);
+  const teamsRef=()=>FBDB.ref(db, roomPath()+`/teams`);
+  const teamRef =()=>FBDB.ref(db, roomPath()+`/teams/${encodeURIComponent(teamName)}`);
 
-  let currentBalance = 1000000;
-  let settingsCache = null;
-  let prevPhase = null; // track phase changes
-
-  // flags
-  let teamLocked = false;
-  let isDead = false;
-
-  function setGameOver(dead){
-    isDead = !!dead;
-    overlay.style.display = isDead ? 'flex' : 'none';
-    if(isDead){ teamMsg.textContent = 'Game over!!'; }
-    updateInputEnabled();
-  }
-
-  function getAllocSum(){
-    return clamp(aInput.value,0,Infinity)
-         + clamp(bInput.value,0,Infinity)
-         + clamp(cInput.value,0,Infinity)
-         + clamp(dInput.value,0,Infinity);
-  }
-
-  // --- enable/disable inputs based on phase + lock + death + full allocation rule ---
-  function updateInputEnabled(){
-    const inputsAllowed = (settingsCache?.phase === 'active') && !teamLocked && !isDead && currentBalance>0;
-    [aInput,bInput,cInput,dInput,maxEvenBtn,clearBtn].forEach(i=> i.disabled = !inputsAllowed);
-    submitBtn.disabled = !inputsAllowed || (getAllocSum() !== currentBalance);
-  }
+  let rafId=null;
 
   function refreshAllocUI(){
-    const a=clamp(aInput.value,0,Infinity),
-          b=clamp(bInput.value,0,Infinity),
-          c=clamp(cInput.value,0,Infinity),
-          d=clamp(dInput.value,0,Infinity);
+    const a=clamp(aInput.value,0,Infinity),b=clamp(bInput.value,0,Infinity),c=clamp(cInput.value,0,Infinity),d=clamp(dInput.value,0,Infinity);
     const sum=a+b+c+d;
-    allocated.textContent = sum.toLocaleString();
-    remaining.textContent = Math.max(0, currentBalance - sum).toLocaleString();
-    updateInputEnabled();
+    const myBal = Number(teamBalance.dataset.raw||1000000);
+    const remainingVal = Math.max(0, myBal - sum);
+    allocated.textContent = new Intl.NumberFormat().format(sum);
+    remaining.textContent = new Intl.NumberFormat().format(remainingVal);
   }
-  [aInput,bInput,cInput,dInput].forEach(i=> i.addEventListener('input', refreshAllocUI));
+  [aInput,bInput,cInput,dInput].forEach(i=> i.addEventListener('input',refreshAllocUI));
 
-  maxEvenBtn.addEventListener('click', ()=>{
-    const q = Math.floor(currentBalance/4), r = currentBalance - q*4;
-    aInput.value = q + (r>0?1:0);
-    bInput.value = q + (r>1?1:0);
-    cInput.value = q + (r>2?1:0);
-    dInput.value = q;
+  maxEvenBtn.addEventListener('click',()=>{
+    // Split current balance evenly
+    const bal = Number(teamBalance.dataset.raw||1000000);
+    const q=Math.floor(bal/4), r=bal-q*4;
+    aInput.value=q+(r>0?1:0); bInput.value=q+(r>1?1:0); cInput.value=q+(r>2?1:0); dInput.value=q;
     refreshAllocUI();
   });
-  clearBtn.addEventListener('click', ()=>{ aInput.value=bInput.value=cInput.value=dInput.value=0; refreshAllocUI(); });
+  clearBtn.addEventListener('click',()=>{ aInput.value=bInput.value=cInput.value=dInput.value=0; refreshAllocUI(); });
 
   async function joinRoom(){
-    room = roomInput.value.trim();
-    teamName = teamInput.value.trim();
-    if(!room){ alert('Enter a room code'); return; }
-    if(!teamName){ alert('Enter a team name'); return; }
-
-    localStorage.setItem('mpd_room', room);
-    localStorage.setItem('mpd_team', teamName);
-
-    await FBDB.update(settingsRef(), { createdAt: Date.now() });
-    const tSnap = await FBDB.get(teamRef());
-    if(!tSnap.exists() || tSnap.val().balance==null){
-      await FBDB.update(teamRef(), { name: teamName, balance: 1000000, locked: false, lastSeen: Date.now(), alloc: {A:0,B:0,C:0,D:0} });
-    } else {
-      await FBDB.update(teamRef(), { name: teamName, lastSeen: Date.now() });
-    }
+    room = roomInput.value.trim(); teamName = teamInput.value.trim(); if(!room){ alert('Enter a room code'); return; } if(!teamName){ alert('Enter a team name'); return; }
+    localStorage.setItem('mpd_room',room); localStorage.setItem('mpd_team',teamName);
+    await FBDB.update(FBDB.ref(db, roomPath()+`/settings`), { createdAt: Date.now() });
+    await FBDB.update(teamRef(), { name: teamName, balance: 1000000, lastSeen: Date.now(), locked: true });
     subscribe();
   }
-  joinBtn.addEventListener('click', joinRoom);
+  joinBtn.addEventListener('click',joinRoom);
 
-  async function submitAllocation(){
-    if(isDead){ return; }
-    if(!room||!teamName){ alert('Join a room and set a team name first.'); return; }
-    const setSnap = await FBDB.get(settingsRef());
-    const settings = setSnap.val() || {};
-    if(settings.phase !== 'active'){ teamMsg.textContent = 'Allocations are closed.'; return; }
-
-    const a=clamp(aInput.value,0,Infinity),
-          b=clamp(bInput.value,0,Infinity),
-          c=clamp(cInput.value,0,Infinity),
-          d=clamp(dInput.value,0,Infinity);
-    const sum = a+b+c+d;
-    if(sum > currentBalance){ alert('You cannot allocate more than your current balance.'); return; }
-    if(sum !== currentBalance){ alert('You must allocate your entire balance before locking in.'); return; }
-
-    await FBDB.update(FBDB.ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}`), {
-      alloc: {A:a,B:b,C:c,D:d},
-      locked: true,
-      lastSeen: Date.now()
-    });
-    teamMsg.textContent = 'Locked in.';
+  function setRing(sec, duration, active){
+    const pct = !active || !duration ? 0 : Math.max(0, Math.min(1, sec / duration)) * 100;
+    timeLeft.style.setProperty('--pct', pct);
+    timeLeft.querySelector('[data-s]').textContent = active ? `${Math.max(0,Math.ceil(sec))}s` : '—';
   }
-  submitBtn.addEventListener('click', submitAllocation);
 
-  // === TEAM COUNTDOWN (only while phase === 'active') ===
-  let countdownRAF = null;
   function bindCountdown(v){
-    if (countdownRAF) cancelAnimationFrame(countdownRAF);
-
-    const t = v && v.timer;
-    const active = v && v.phase === 'active';
-    if (!t || !t.startAt || !t.duration || !active || isDead) {
-      timeLeft.textContent = '—';
-      return;
-    }
-
-    const deadline = t.startAt + t.duration*1000;
-    function tick(){
-      const sec = Math.max(0, Math.ceil((deadline - Date.now())/1000));
-      timeLeft.textContent = `${sec}s`;
-      if (sec > 0 && v.phase === 'active' && !isDead) {
-        countdownRAF = requestAnimationFrame(tick);
-      } else if (sec <= 0 && v.phase === 'active' && !teamLocked && !isDead) {
-        // Time ran out before team locked in → Game Over for this player
-        setGameOver(true);
-        try { FBDB.update(teamRef(), { locked:true, dead:true, lastSeen: Date.now() }); } catch(e){}
-      }
-    }
+    if(rafId) cancelAnimationFrame(rafId);
+    const t=v&&v.timer; const active=v&&v.phase==='active'&&t&&t.startAt&&t.duration>0;
+    if(!active){ setRing(0,0,false); return; }
+    const deadline=t.startAt+t.duration*1000;
+    const tick=()=>{
+      const sec=Math.max(0,(deadline-Date.now())/1000);
+      setRing(sec, t.duration, v.phase==='active');
+      if(sec>0 && v.phase==='active') rafId=requestAnimationFrame(tick); else setRing(0,0,false);
+    };
     tick();
   }
 
+  async function submitAllocation(){
+    if(!room||!teamName){ alert('Join a room and set a team name first.'); return; }
+    const sSnap = await FBDB.get(settingsRef()); const st=sSnap.val()||{}; if(st.phase!=='active'){ teamMsg.textContent='You can only submit while the round is active.'; return; }
+    const a=clamp(aInput.value,0,Infinity), b=clamp(bInput.value,0,Infinity), c=clamp(cInput.value,0,Infinity), d=clamp(dInput.value,0,Infinity);
+    const sum=a+b+c+d;
+    const meSnap = await FBDB.get(teamRef()); const me = meSnap.val() || { balance: 1000000 };
+    const bal = Number(me.balance||0);
+    if(sum!==bal){ alert('You must allocate your entire balance.'); return; }
+    await FBDB.update(teamRef(), { alloc:{A:a,B:b,C:c,D:d}, locked:true, lastSeen: Date.now() });
+    teamMsg.textContent='Locked in!';
+  }
+  submitBtn.addEventListener('click',submitAllocation);
+
   function subscribe(){
-    if(!room) return;
+    if(!room||!db) return;
 
-    FBDB.onValue(settingsRef(), s=>{
-      const v = s.val() || {phase:'active'};
-      settingsCache = v;
-
-      // PHASE TRANSITION: when host switches to 'active', unlock only if not dead
-      if (prevPhase !== 'active' && v.phase === 'active') {
-        if (isDead) {
-          try { FBDB.update(teamRef(), { locked:true }); } catch(e){}
-        } else {
-          teamLocked = false;                      // re-enable locally
-          aInput.value = 0; bInput.value = 0;     // clear local inputs
-          cInput.value = 0; dInput.value = 0;
-          refreshAllocUI();
-          // Nudge our node (safe if already done server-side)
-          try { FBDB.update(teamRef(), { locked:false, alloc:{A:0,B:0,C:0,D:0} }); } catch(e){}
-        }
-      }
-      prevPhase = v.phase;
-
-      const phaseMsg = {active:'Allocations open – choose your split!', locked:'Locked – waiting for reveal…', revealed: v.correct?`Revealed: ${v.correct}`:'Revealed'};
-      teamMsg.textContent = isDead ? 'Game over!!' : (phaseMsg[v.phase] || '—');
+    FBDB.onValue(settingsRef(), snap=>{
+      const v=snap.val()||{number:1,phase:'between',duration:45,startAt:0,correct:''};
+      roundNum.textContent=v.number||1;
       bindCountdown(v);
-      updateInputEnabled();
+      const phases={between:'Waiting for the host to start…',active:'Round active – allocate & lock in!',locked:'Locked – awaiting reveal…',revealed:v.correct?`Revealed: ${v.correct}`:'Revealed'}; teamMsg.textContent=phases[v.phase]||'—';
+      const disabled=v.phase!=='active'; [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled=disabled);
     });
 
-    FBDB.onValue(teamRef(), tSnap=>{
-      const t = tSnap.val() || {};
-      currentBalance = Number(t.balance != null ? t.balance : 1000000);
-      teamBalance.textContent = money(currentBalance);
-
-      const alloc = t.alloc || {A:0,B:0,C:0,D:0};
-      aInput.value = alloc.A||0; bInput.value = alloc.B||0; cInput.value = alloc.C||0; dInput.value = alloc.D||0;
-      refreshAllocUI();
-
-      const deadFlag = t.dead === true;
-      const deadNow = currentBalance <= 0 || deadFlag;
-      if (deadNow !== isDead) setGameOver(deadNow);
-      if (deadNow && t.locked !== true) {
-        try { FBDB.update(teamRef(), { locked:true }); } catch(e){}
+    FBDB.onValue(teamsRef(), snap=>{
+      const teams=snap.val()||{}; const key=encodeURIComponent(teamName); const me = teams[key] || Object.values(teams).find(t=>t.name===teamName) || {balance:1000000};
+      const bal=Number(me.balance!=null?me.balance:1000000);
+      teamBalance.textContent=money(bal); teamBalance.dataset.raw=String(bal);
+      if(me.dead===true||bal<=0){
+        document.body.innerHTML = '<div style="display:grid;place-items:center;height:100vh;background:radial-gradient(600px 400px at 50% 30%,#200,#000)"><div style="text-align:center;color:#fff"><div style="font-size:68px;font-weight:900;letter-spacing:1px">Game Over!!</div><div style="opacity:.75;margin-top:8px">You are eliminated.</div></div></div>';
       }
-
-      teamLocked = !!t.locked; // keep in sync with DB
-      updateInputEnabled();
     });
   }
 
