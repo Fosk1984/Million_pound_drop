@@ -6,7 +6,7 @@
   <title>Million Pound Drop – Team</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
   <style>
-    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--ink:#e6ecff}
+    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--ink:#e6ecff}
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
     .wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
@@ -87,7 +87,7 @@
       <div class="row" style="margin-top:8px">
         <button id="maxEvenBtn" type="button">Split Evenly</button>
         <button id="clearBtn" type="button" class="ghost">Clear</button>
-        <button id="submitBtn" type="button" class="primary">Lock In</button>
+        <button id="submitBtn" type="button" class="primary" disabled>Lock In</button>
       </div>
       <div class="muted" id="teamMsg" style="margin-top:8px">Waiting for the host to start…</div>
     </div>
@@ -98,7 +98,7 @@
 <div id="gameOverOverlay" class="overlay" role="dialog" aria-live="polite" aria-label="Game over">
   <div class="panel">
     <div class="title">Game over!!</div>
-    <div class="sub">Your balance has dropped to £0. Please watch along on the main screen.</div>
+    <div class="sub">Your balance has dropped to £0 or you ran out of time without locking in. Please watch along on the main screen.</div>
   </div>
 </div>
 
@@ -157,10 +157,18 @@
     updateInputEnabled();
   }
 
-  // --- enable/disable inputs based on phase + lock + death ---
+  function getAllocSum(){
+    return clamp(aInput.value,0,Infinity)
+         + clamp(bInput.value,0,Infinity)
+         + clamp(cInput.value,0,Infinity)
+         + clamp(dInput.value,0,Infinity);
+  }
+
+  // --- enable/disable inputs based on phase + lock + death + full allocation rule ---
   function updateInputEnabled(){
-    const allow = (settingsCache?.phase === 'active') && !teamLocked && !isDead;
-    [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = !allow);
+    const inputsAllowed = (settingsCache?.phase === 'active') && !teamLocked && !isDead && currentBalance>0;
+    [aInput,bInput,cInput,dInput,maxEvenBtn,clearBtn].forEach(i=> i.disabled = !inputsAllowed);
+    submitBtn.disabled = !inputsAllowed || (getAllocSum() !== currentBalance);
   }
 
   function refreshAllocUI(){
@@ -171,6 +179,7 @@
     const sum=a+b+c+d;
     allocated.textContent = sum.toLocaleString();
     remaining.textContent = Math.max(0, currentBalance - sum).toLocaleString();
+    updateInputEnabled();
   }
   [aInput,bInput,cInput,dInput].forEach(i=> i.addEventListener('input', refreshAllocUI));
 
@@ -217,6 +226,7 @@
           d=clamp(dInput.value,0,Infinity);
     const sum = a+b+c+d;
     if(sum > currentBalance){ alert('You cannot allocate more than your current balance.'); return; }
+    if(sum !== currentBalance){ alert('You must allocate your entire balance before locking in.'); return; }
 
     await FBDB.update(FBDB.ref(db, `${roomPath()}/teams/${encodeURIComponent(teamName)}`), {
       alloc: {A:a,B:b,C:c,D:d},
@@ -245,6 +255,10 @@
       timeLeft.textContent = `${sec}s`;
       if (sec > 0 && v.phase === 'active' && !isDead) {
         countdownRAF = requestAnimationFrame(tick);
+      } else if (sec <= 0 && v.phase === 'active' && !teamLocked && !isDead) {
+        // Time ran out before team locked in → Game Over for this player
+        setGameOver(true);
+        try { FBDB.update(teamRef(), { locked:true, dead:true, lastSeen: Date.now() }); } catch(e){}
       }
     }
     tick();
@@ -260,7 +274,6 @@
       // PHASE TRANSITION: when host switches to 'active', unlock only if not dead
       if (prevPhase !== 'active' && v.phase === 'active') {
         if (isDead) {
-          // Ensure we remain locked in DB so host auto-locks can still work
           try { FBDB.update(teamRef(), { locked:true }); } catch(e){}
         } else {
           teamLocked = false;                      // re-enable locally
@@ -288,7 +301,8 @@
       aInput.value = alloc.A||0; bInput.value = alloc.B||0; cInput.value = alloc.C||0; dInput.value = alloc.D||0;
       refreshAllocUI();
 
-      const deadNow = currentBalance <= 0;
+      const deadFlag = t.dead === true;
+      const deadNow = currentBalance <= 0 || deadFlag;
       if (deadNow !== isDead) setGameOver(deadNow);
       if (deadNow && t.locked !== true) {
         try { FBDB.update(teamRef(), { locked:true }); } catch(e){}
