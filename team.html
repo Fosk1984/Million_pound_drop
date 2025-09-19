@@ -57,7 +57,7 @@
         </div>
       </div>
 
-      <div class="pill" style="margin:8px 0">Allocated: <span id="allocated">0</span> / £<span id="remaining">1,000,000</span> remaining</div>
+      <div class="pill" style="margin:8px 0">Allocated: £<span id="allocated">0</span> · Remaining: £<span id="remaining">1,000,000</span></div>
 
       <div class="grid cols-4">
         <div>
@@ -130,6 +130,13 @@
   let currentBalance = 1000000;
   let settingsCache = null;
 
+  // --- enable/disable inputs based on phase + lock (called from both listeners) ---
+  let teamLocked = false;
+  function updateInputEnabled(){
+    const allow = (settingsCache?.phase === 'active') && !teamLocked;
+    [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = !allow);
+  }
+
   function refreshAllocUI(){
     const a=clamp(aInput.value,0,Infinity),
           b=clamp(bInput.value,0,Infinity),
@@ -193,6 +200,7 @@
   }
   submitBtn.addEventListener('click', submitAllocation);
 
+  // === TEAM COUNTDOWN (only while phase === 'active') ===
   let countdownRAF = null;
   function bindCountdown(v){
     if (countdownRAF) cancelAnimationFrame(countdownRAF);
@@ -224,6 +232,7 @@
       const phaseMsg = {active:'Allocations open – choose your split!', locked:'Locked – waiting for reveal…', revealed: v.correct?`Revealed: ${v.correct}`:'Revealed'};
       teamMsg.textContent = phaseMsg[v.phase] || '—';
       bindCountdown(v);
+      updateInputEnabled();
     });
 
     FBDB.onValue(teamRef(), tSnap=>{
@@ -234,8 +243,8 @@
       aInput.value = alloc.A||0; bInput.value = alloc.B||0; cInput.value = alloc.C||0; dInput.value = alloc.D||0;
       refreshAllocUI();
 
-      const isLocked = !!t.locked;
-      [aInput,bInput,cInput,dInput,submitBtn,maxEvenBtn,clearBtn].forEach(i=> i.disabled = isLocked || (settingsCache?.phase!=='active'));
+      teamLocked = !!t.locked;
+      updateInputEnabled();
     });
   }
 
@@ -244,4 +253,3 @@
 </script>
 </body>
 </html>
-
