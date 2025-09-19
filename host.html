@@ -199,6 +199,34 @@
     hostTimer.querySelector('[data-s]').textContent = active ? `${Math.max(0,Math.ceil(sec))}s` : '—';
   }
 
+  // === TIMEOUT ENFORCER ===
+  async function handleTimeoutIfDue(v){
+    const t = v && v.timer;
+    if(!(v && v.phase === 'active' && t && t.startAt && t.duration > 0)) return;
+    if(t.expiredAt) return; // already processed
+    const deadline = t.startAt + t.duration*1000;
+    if(Date.now() < deadline) return;
+
+    try{
+      const snapshot = await FBDB.get(teamsRef());
+      const teams = snapshot.val() || {};
+      const updates = {};
+      Object.keys(teams).forEach(k=>{
+        const T = teams[k] || {};
+        const alive  = !(T.dead === true) && Number(T.balance || 0) > 0;
+        const locked = T.locked === true;
+        if(alive && !locked){
+          updates[`${roomPath()}/teams/${k}/balance`] = 0;
+          updates[`${roomPath()}/teams/${k}/dead`]    = true;
+          updates[`${roomPath()}/teams/${k}/locked`]  = true;
+        }
+      });
+      updates[`${roomPath()}/settings/phase`] = 'locked';
+      updates[`${roomPath()}/settings/timer/expiredAt`] = Date.now();
+      if(Object.keys(updates).length) await FBDB.update(FBDB.ref(db), updates);
+    }catch(e){ console.error('timeout processing failed:', e); }
+  }
+
   function bindHostCountdown(v){
     if(hostRAF) cancelAnimationFrame(hostRAF);
     const t = v && v.timer;
@@ -209,6 +237,7 @@
       const remainingSec = Math.max(0, (deadline - Date.now())/1000);
       setHostRing(remainingSec, t.duration, v.phase === 'active');
       if(remainingSec > 0 && v.phase === 'active') hostRAF = requestAnimationFrame(tick);
+      else handleTimeoutIfDue(v);
     }
     tick();
   }
