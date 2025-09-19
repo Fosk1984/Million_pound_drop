@@ -6,7 +6,7 @@
   <title>Million Pound Drop – Spectator</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
   <style>
-    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--ink:#e6ecff}
+    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--ink:#e6ecff}
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
     .wrap{max-width:1200px;margin:0 auto;padding:20px 16px 80px}
@@ -15,13 +15,13 @@
     .grid{display:grid;gap:16px}
     .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
     @media(max-width:1024px){.grid.cols-2{grid-template-columns:1fr}}
-    .card{background:linear-gradient(180deg,#16214a 0,#0f1740 100%);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
+    .card{position:relative;background:linear-gradient(180deg,#16214a 0,#0f1740 100%);border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.35);overflow:hidden}
     .card .pad{padding:16px}
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
     input,button{background:#0e1637;border:1px solid rgba(255,255,255,.12);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:15px}
     button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%)}
     .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
-    .barRow{display:grid;grid-template-columns:40px 1fr 110px;align-items:center;gap:10px}
+    .barRow{display:grid;grid-template-columns:40px 1fr 120px;align-items:center;gap:10px}
     .bar{height:18px;background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
     .bar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.2),rgba(94,234,212,.8));transition:width .5s ease}
     .bar.bad>span{background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(239,68,68,.9))}
@@ -29,11 +29,12 @@
     .tray{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
     .tray .cell{background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;text-align:center}
     .cell.drop{animation:drop 900ms ease forwards}
-    .tray .cell.correct{border-color:#22c55e;box-shadow:0 0 18px rgba(34,197,94,.45);transform:scale(1.03)}
-    #specCorrect.good{display:inline-block;padding:4px 10px;border-radius:999px;background:linear-gradient(180deg,#22c55e,#16a34a);color:#001b18;box-shadow:0 0 18px rgba(34,197,94,.45)}
     @keyframes drop{0%{transform:translateY(0);opacity:1}80%{transform:translateY(32px);opacity:.6}100%{transform:translateY(80px);opacity:0}}
-    @keyframes pulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
-    #specCorrect.good{animation:pulse 1.2s ease-in-out 3}
+
+    /* DEAD overlay */
+    .teamCard.dead .pad{filter:grayscale(1) brightness(.7); opacity:.6}
+    .deadMark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:160px;line-height:1;color:rgba(239,68,68,.55);text-shadow:0 6px 18px rgba(0,0,0,.5);pointer-events:none}
+    .deadLabel{position:absolute;top:8px;right:8px;background:rgba(239,68,68,.95);color:#fff;border-radius:999px;padding:6px 10px;font-weight:800;letter-spacing:.5px}
   </style>
 </head>
 <body>
@@ -78,6 +79,7 @@
 </div>
 
 <script type="module">
+  // Firebase config (same as host/team)
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -98,144 +100,73 @@
   const el=id=>document.getElementById(id);
   const money=n=>'£'+Number(n||0).toLocaleString();
 
-  let room = new URLSearchParams(location.search).get('room')||localStorage.getItem('mpd_room')||'';
-  const roomInput=el('roomInput'), joinBtn=el('joinBtn');
-  const spectatorGrid=el('spectatorGrid');
-  const specRoom=el('specRoom'), specTeamCount=el('specTeamCount');
-  const specRound=el('specRound'), specPhase=el('specPhase'), specCorrect=el('specCorrect');
+  let room = new URLSearchParams(location.search).get('room') || localStorage.getItem('mpd_room') || '';
+  const roomInput=el('roomInput'); const joinBtn=el('joinBtn');
+  const specRoom=el('specRoom'); const specRound=el('specRound'); const specPhase=el('specPhase'); const specCorrect=el('specCorrect'); const specTeamCount=el('specTeamCount');
+  const grid=el('spectatorGrid');
 
-  roomInput.value = room; if(room) specRoom.textContent = room;
+  roomInput.value = room;
+  if(room) specRoom.textContent = room;
 
   const roomPath = ()=>`rooms/${room}`;
   const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
-  const roundRef  =()=> FBDB.ref(db, roomPath()+`/round`);
   const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
 
-  const normalizeState = v => ({ number: v?.number ?? 1, phase: v?.phase ?? 'active', correct: v?.correct ?? '', timer: v?.timer || null });
-
-  function teamBars(label, val, pct, cls){
-    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${money(val)}</div></div>`;
-  }
   function renderTeamsHtml(teams, state){
     const names = Object.keys(teams||{}).sort();
     const correct = state.correct || '';
-    const isRevealed = state.phase==='revealed' && !!correct;
-    return names.map(name=>{
-      const t = teams[name] || {};
-      const r = state.number || 1;
-      const alloc = t.alloc || ((t.allocations && t.allocations[r]) || {A:0,B:0,C:0,D:0});
-      const total = Number(alloc.A||0)+Number(alloc.B||0)+Number(alloc.C||0)+Number(alloc.D||0);
-      const bal   = Number((t.balance!=null ? t.balance : (t.balanceTokens!=null ? t.balanceTokens*1000 : 1000000)));
+    const revealed = state.phase==='revealed' && !!correct;
+    return names.map(key=>{
+      const t = teams[key] || {};
+      const name = t.name || decodeURIComponent(key) || key;
+      const alloc = t.alloc || {A:0,B:0,C:0,D:0};
+      const bal   = Number(t.balance != null ? t.balance : 1000000);
+      const isDead = t.dead === true || bal <= 0;
+      const total = (Number(alloc.A)||0)+(Number(alloc.B)||0)+(Number(alloc.C)||0)+(Number(alloc.D)||0);
       const pct = x => total>0 ? Math.round((Number(x)/Math.max(total,1))*100) : 0;
-      const dropClass = opt => (isRevealed && opt!==correct)? ' drop':'';
-      const cellCorrect = opt => (isRevealed && opt===correct)? ' correct':'';
-      const barCls = opt => isRevealed ? (opt===correct? 'bar good' : 'bar bad') : 'bar';
+      const barCls = opt => revealed ? (opt===correct? 'bar good':'bar bad') : 'bar';
+      const dropClass = opt => (revealed && opt!==correct)? ' drop':'';
 
       return `
-      <div class="card"><div class="pad">
-        <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${money(bal)}</div></div>
-        ${teamBars('A', alloc.A||0, pct(alloc.A||0), barCls('A'))}
-        ${teamBars('B', alloc.B||0, pct(alloc.B||0), barCls('B'))}
-        ${teamBars('C', alloc.C||0, pct(alloc.C||0), barCls('C'))}
-        ${teamBars('D', alloc.D||0, pct(alloc.D||0), barCls('D'))}
-        <div class="tray" style="margin-top:8px">
-          <div class="cell${dropClass('A')}${cellCorrect('A')}">A: ${money(alloc.A||0)}</div>
-          <div class="cell${dropClass('B')}${cellCorrect('B')}">B: ${money(alloc.B||0)}</div>
-          <div class="cell${dropClass('C')}${cellCorrect('C')}">C: ${money(alloc.C||0)}</div>
-          <div class="cell${dropClass('D')}${cellCorrect('D')}">D: ${money(alloc.D||0)}</div>
+        <div class="card teamCard ${isDead?'dead':''}"><div class="pad">
+          <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${name}</h4><div class="pill">Balance: ${money(bal)} ${isDead? '· DEAD':''}</div></div>
+          <div class="barRow"><div>A</div><div class="${barCls('A')}"><span style="width:${pct(alloc.A)}%"></span></div><div>${money(alloc.A||0)}</div></div>
+          <div class="barRow"><div>B</div><div class="${barCls('B')}"><span style="width:${pct(alloc.B)}%"></span></div><div>${money(alloc.B||0)}</div></div>
+          <div class="barRow"><div>C</div><div class="${barCls('C')}"><span style="width:${pct(alloc.C)}%"></span></div><div>${money(alloc.C||0)}</div></div>
+          <div class="barRow"><div>D</div><div class="${barCls('D')}"><span style="width:${pct(alloc.D)}%"></span></div><div>${money(alloc.D||0)}</div></div>
+          <div class="tray" style="margin-top:8px">
+            <div class="cell${dropClass('A')}">A: ${money(alloc.A||0)}</div>
+            <div class="cell${dropClass('B')}">B: ${money(alloc.B||0)}</div>
+            <div class="cell${dropClass('C')}">C: ${money(alloc.C||0)}</div>
+            <div class="cell${dropClass('D')}">D: ${money(alloc.D||0)}</div>
+          </div>
         </div>
-      </div></div>`;
+        ${isDead? '<div class="deadMark" aria-hidden="true">✕</div><div class="deadLabel">ELIMINATED</div>':''}
+        </div>`;
     }).join('');
-  }
-
-  let specCountdownRAF = null;
-  function specBindCountdown(state){
-    if (specCountdownRAF) cancelAnimationFrame(specCountdownRAF);
-
-    const t = state && state.timer;
-    const active = state && state.phase === 'active';
-    if (!t || !t.startAt || !t.duration || !active) {
-      specPhase.textContent = state?.phase || '—';
-      return;
-    }
-
-    const deadline = t.startAt + t.duration*1000;
-    function tick(){
-      const sec = Math.max(0, Math.ceil((deadline - Date.now())/1000));
-      specPhase.textContent = `${state.phase} – ${sec}s`;
-      if (sec > 0 && state.phase === 'active') {
-        specCountdownRAF = requestAnimationFrame(tick);
-      }
-    }
-    tick();
-  }
-
-  function renderAll(state, teams){
-    specRoom.textContent = room;
-    specRound.textContent = state.number ?? '—';
-    specCorrect.textContent = state.correct || '—';
-    specCorrect.classList.toggle('good', state.phase==='revealed' && !!state.correct);
-
-    specBindCountdown(state);
-    spectatorGrid.innerHTML = renderTeamsHtml(teams, state);
-    specTeamCount.textContent = Object.keys(teams||{}).length;
-  }
-
-  let frozenState = null;
-  let frozenTeams = null;
-  let teamsListener = null;
-
-  function attachTeamsLive(){
-    if(teamsListener) return;
-    teamsListener = snap=>{
-      if(frozenState) return;
-      const teams = snap.val() || {};
-      Promise.all([FBDB.get(settingsRef()), FBDB.get(roundRef())]).then(([s1,s2])=>{
-        const v = normalizeState(s1.val() || s2.val() || {});
-        renderAll(v, teams);
-      });
-    };
-    FBDB.onValue(teamsRef(), teamsListener);
-  }
-  function detachTeamsLive(){
-    if(!teamsListener) return;
-    FBDB.off(teamsRef(), 'value', teamsListener);
-    teamsListener = null;
-  }
-
-  function handleStateUpdate(raw){
-    const state = normalizeState(raw);
-
-    if(state.phase==='revealed' && state.correct){
-      if(!frozenState){
-        frozenState = state;
-        FBDB.get(teamsRef()).then(ts=>{
-          frozenTeams = ts.val() || {};
-          renderAll(frozenState, frozenTeams);
-        });
-      }
-      detachTeamsLive();
-      return;
-    }
-
-    if(frozenState){ frozenState=null; frozenTeams=null; }
-    attachTeamsLive();
-    FBDB.get(teamsRef()).then(ts=>{ renderAll(state, ts.val() || {}); });
   }
 
   function subscribe(){
     if(!room) return;
-    FBDB.onValue(settingsRef(), s=>{ if(s.exists()) handleStateUpdate(s.val()); });
-    FBDB.onValue(roundRef(),    s=>{ if(s.exists()) handleStateUpdate(s.val()); });
-    attachTeamsLive();
+    FBDB.onValue(settingsRef(), s=>{
+      const v = s.val() || {number:1,phase:'between',correct:''};
+      specRound.textContent = v.number || '—';
+      specPhase.textContent = v.phase || '—';
+      specCorrect.textContent = v.correct || '—';
+      FBDB.get(teamsRef()).then(ts=>{
+        const teams = ts.val()||{}; specTeamCount.textContent = Object.keys(teams).length;
+        grid.innerHTML = renderTeamsHtml(teams, v);
+      });
+    });
+    FBDB.onValue(teamsRef(), t=>{
+      const teams = t.val()||{}; specTeamCount.textContent = Object.keys(teams).length;
+      FBDB.get(settingsRef()).then(s=>{ grid.innerHTML = renderTeamsHtml(teams, s.val()||{}); });
+    });
   }
 
   function joinRoom(){
-    room = roomInput.value.trim();
-    if(!room){ alert('Enter a room code'); return; }
-    localStorage.setItem('mpd_room', room);
-    specRoom.textContent = room;
-    location.search = `?room=${encodeURIComponent(room)}`;
+    room = roomInput.value.trim(); if(!room){ alert('Enter a room code'); return; }
+    localStorage.setItem('mpd_room', room); specRoom.textContent = room; subscribe();
   }
   joinBtn.addEventListener('click', joinRoom);
 
