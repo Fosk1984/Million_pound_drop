@@ -182,8 +182,6 @@
 
     await FBDB.update(FBDB.ref(db), updates);
 
-    // optional: auto-open allocations for next question
-    setTimeout(()=> FBDB.update(settingsRef(), { phase: 'active', correct: '' }), 900);
   }
 
   async function clearAll(){
