@@ -48,7 +48,8 @@
     .qrTitle{font-size:28px;font-weight:900;letter-spacing:.4px;margin-bottom:4px}
     .qrRoom{font-family:"Chivo Mono",monospace;font-size:22px;opacity:.9}
     .qrHint{color:var(--muted)}
-    canvas.qr{width:min(65vmin,620px);height:min(65vmin,620px);box-shadow:0 28px 70px rgba(0,0,0,.55), 0 0 0 8px rgba(255,255,255,.06);border-radius:22px;background:white}
+    canvas.qr{width:min(65vmin,620px);height:min(65vmin,620px);box-shadow:0 28px 70px rgba(0,0,0,.55), 0 0 0 8px rgba(255,255,255,.06);border-radius:22px;background:#fff}
+    img.qr{width:min(65vmin,620px);height:min(65vmin,620px);box-shadow:0 28px 70px rgba(0,0,0,.55), 0 0 0 8px rgba(255,255,255,.06);border-radius:22px;background:#fff}
   </style>
 </head>
 <body>
@@ -104,7 +105,6 @@
   </section>
 </div>
 
-<!-- We will lazy-load the QR library only if Start Game is pressed -->
 <script>
   const $ = id => document.getElementById(id);
   const roomEl = $('room');
@@ -186,18 +186,7 @@
     return `ROOM-${tag}-${y}`; // e.g. ROOM-Q7KP-25
   }
 
-  function startGame(){
-    // 1) Get or generate room
-    const room = roomEl.value.trim() || genRoom();
-    roomEl.value = room; buildLinks(); saveState();
-
-    // 2) Open Host in a new tab (Host will create the room in Firebase on load)
-    const hostUrl = `host.html?room=${encodeURIComponent(room)}`;
-    window.open(hostUrl, '_blank');
-
-    // 3) Replace this page with a fullscreen QR for Team join
-    const teamUrl = `${base()}team.html?room=${encodeURIComponent(room)}`;
-
+  function showQR(url, room){
     // Fullscreen layout
     const stage = document.createElement('div');
     stage.className = 'qrStage';
@@ -206,21 +195,65 @@
         <div class="qrTitle">Scan to Join – Team View</div>
         <canvas id="qrCanvas" class="qr" aria-label="QR code to join team view"></canvas>
         <div class="qrRoom">(${room})</div>
-        <div class="qrHint">Or share: <code class="mono">${teamUrl}</code></div>
+        <div class="qrHint">Or share: <code class="mono">${url}</code></div>
         <div class="qrHint">Open <b>Spectator</b> on another computer and type the room shown above.</div>
       </div>`;
     document.body.innerHTML = '';
     document.body.appendChild(stage);
 
-    // Lazy-load QR library
-    const lib = document.createElement('script');
-    lib.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-    lib.onload = ()=>{
-      const canvas = document.getElementById('qrCanvas');
-      const opts = { errorCorrectionLevel: 'M', margin: 2, scale: 16 }; // big & crisp
-      window.QRCode.toCanvas(canvas, teamUrl, opts, (err)=>{ if(err) console.error(err); });
-    };
-    document.head.appendChild(lib);
+    // Try multiple QR renderers with graceful fallback
+    const canvas = document.getElementById('qrCanvas');
+    const size = Math.min(620, Math.floor(Math.min(window.innerWidth, window.innerHeight)*0.65));
+
+    function loadScript(src){
+      return new Promise((resolve, reject)=>{
+        const s = document.createElement('script');
+        s.src = src; s.onload = ()=> resolve(); s.onerror = () => reject(new Error('load failed: '+src));
+        document.head.appendChild(s);
+      });
+    }
+
+    function tryQRCodeLib(){
+      return loadScript('https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js')
+        .then(()=>{
+          if(!(window.QRCode && typeof window.QRCode.toCanvas==='function')) throw new Error('QRCode UMD not available');
+          return new Promise((res, rej)=> window.QRCode.toCanvas(canvas, url, { errorCorrectionLevel:'M', margin:2, scale:8, width:size }, err=> err?rej(err):res()));
+        });
+    }
+
+    function tryQRious(){
+      return loadScript('https://unpkg.com/qrious@4.0.2/dist/qrious.min.js')
+        .then(()=>{
+          if(!(window.QRious)) throw new Error('QRious not available');
+          // QRious draws directly to canvas or creates its own; we pass element
+          new window.QRious({ element: canvas, value: url, level: 'M', size: size });
+        });
+    }
+
+    function fallbackImage(){
+      const img = document.createElement('img');
+      img.className = 'qr';
+      img.alt = 'QR code';
+      img.src = 'https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(url);
+      canvas.replaceWith(img);
+    }
+
+    // Attempt render chain
+    tryQRCodeLib().catch(()=> tryQRious()).catch(()=> fallbackImage());
+  }
+
+  function startGame(){
+    // 1) Get or generate room first
+    const room = roomEl.value.trim() || genRoom();
+    roomEl.value = room; buildLinks(); saveState();
+
+    // 2) Open Host immediately (keeps popup unblockers happy)
+    const hostUrl = `host.html?room=${encodeURIComponent(room)}`;
+    window.open(hostUrl, '_blank');
+
+    // 3) Build Team URL & show QR
+    const teamUrl = `${base()}team.html?room=${encodeURIComponent(room)}`;
+    showQR(teamUrl, room);
   }
 
   document.getElementById('startGame').addEventListener('click', startGame);
