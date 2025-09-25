@@ -7,14 +7,15 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1020'/%3E%3Ctext x='50%' y='58%' text-anchor='middle' font-family='Arial' font-size='34' fill='%235eead4'%3E£%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Chivo+Mono:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800;900&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#0b1020;--card:#121a36;--muted:#7c88b0;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--warn:#f59e0b;--ink:#e6ecff}
+    :root{--bg:#0b1020;--card:#121a36;--muted:#8ea0d6;--accent:#5eead4;--good:#22c55e;--bad:#ef4444;--ink:#e6ecff}
     *{box-sizing:border-box} html,body{height:100%}
     body{margin:0;font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;background:radial-gradient(1000px 600px at 20% -10%,#1a2452 0,#0b1020 60%),radial-gradient(800px 500px at 110% 10%,#1b3355 0,#0b1020 60%),var(--bg);color:var(--ink)}
     .wrap{max-width:1200px;margin:0 auto;padding:20px 16px 80px}
     header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
-    .title{font-weight:800;letter-spacing:.3px}.muted{color:var(--muted)}
+    .title{font-weight:900;letter-spacing:.3px;font-size:28px}
+    .muted{color:var(--muted)}
     .grid{display:grid;gap:16px}
     .grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
     @media(max-width:1024px){.grid.cols-2{grid-template-columns:1fr}}
@@ -23,9 +24,10 @@
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
     input,select,button{background:#0e1637;border:1px solid rgba(255,255,255,.12);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:15px}
     button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%)}
-    button.primary{background:linear-gradient(180deg,#00b3a4 0,#0aa596 100%);border:none;color:#001b18;font-weight:700}
+    button.primary{background:linear-gradient(180deg,#00b3a4 0,#0aa596 100%);border:none;color:#001b18;font-weight:800}
     button.danger{background:linear-gradient(180deg,#ff6672 0,#ef4444 100%);border:none}
     .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#0d1533;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted)}
+
     .barRow{display:grid;grid-template-columns:40px 1fr 110px;align-items:center;gap:10px}
     .bar{height:18px;background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
     .bar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.2),rgba(94,234,212,.8));transition:width .5s ease}
@@ -33,36 +35,16 @@
     .bar.good>span{background:linear-gradient(90deg,rgba(34,197,94,.25),rgba(34,197,94,.9))}
     .tray{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
     .tray .cell{background:#0b1434;border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:8px;text-align:center}
-    .cell.drop{animation:drop 900ms ease forwards}
-    @keyframes drop{0%{transform:translateY(0);opacity:1}80%{transform:translateY(32px);opacity:.6}100%{transform:translateY(80px);opacity:0}}
-
-    /* === POLISH PACK === */
-    :root{ --bg:#070b1a; --card:#0f1838; --ink:#e9efff; --muted:#8ea0d6; --accent:#5eead4; --accent-2:#8b5cf6 }
-    .title, h3, h4{ text-shadow:0 1px 0 rgba(255,255,255,.06), 0 8px 24px rgba(139,92,246,.18) }
-    .card{ background:linear-gradient(180deg,rgba(22,33,74,.75),rgba(15,23,64,.85)); backdrop-filter: blur(6px); border:1px solid rgba(255,255,255,.12); box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.05); border-radius:20px }
-    button{ border-radius:14px; transition:transform .15s ease, box-shadow .2s ease, filter .2s ease; box-shadow:0 8px 20px rgba(0,0,0,.35) }
-    button:hover{ transform:translateY(-1px); filter:brightness(1.05) }
-    button:active{ transform:translateY(0) }
-    button.primary{ background:linear-gradient(135deg,var(--accent) 0%, #22d3ee 40%, var(--accent-2) 100%); color:#041316; font-weight:800; border:none; text-shadow:0 1px 0 rgba(255,255,255,.25) }
-    button.danger{ background:linear-gradient(135deg,#ff727e,#ef4444); color:#fff; border:none; font-weight:800 }
-    .pill{ border:1px solid rgba(255,255,255,.14); background:rgba(13,21,51,.85) }
-    .bar>span{ box-shadow:inset 0 0 8px rgba(255,255,255,.15) }
-    .bar.good>span{ box-shadow:0 0 18px rgba(34,197,94,.55) }
-    .bar.bad>span{ box-shadow:0 0 18px rgba(239,68,68,.55) }
-    .tray .cell{ background:rgba(11,20,52,.7); border-color:rgba(255,255,255,.14) }
-    .timerRing{ --pct:0; width:82px; height:82px; border-radius:999px; display:inline-grid; place-items:center; position:relative; background: conic-gradient(var(--accent) calc(var(--pct)*1%), rgba(255,255,255,.08) 0); box-shadow:0 0 28px rgba(94,234,212,.2) inset, 0 0 10px rgba(94,234,212,.25) }
-    .timerRing::before{ content:""; position:absolute; inset:6px; border-radius:inherit; background:#0b1020; box-shadow:inset 0 0 0 1px rgba(255,255,255,.06) }
-    .timerRing span{ position:relative; font-weight:800; font-family:"Chivo Mono", monospace; font-size:20px }
   </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
-      <div class="title" style="font-size:28px">Million Pound Drop – Host</div>
-      <div class="muted">Project this view. Create a room, start rounds, reveal answers.</div>
+      <div class="title">Million Pound Drop – Host</div>
+      <div class="muted">Project this view. Create a room and control rounds.</div>
     </div>
-    <div class="row" style="max-width:700px">
+    <div class="row" style="max-width:720px">
       <input id="roomInput" placeholder="Room code (e.g. KEELE-2025)" />
       <button id="joinBtn" class="primary">Create / Join Room</button>
     </div>
@@ -70,7 +52,7 @@
 
   <section class="card">
     <div class="pad">
-      <div class="row" style="align-items:flex-end; gap:16px">
+      <div class="row" style="align-items:flex-end">
         <div>
           <label>Round</label>
           <div class="row" style="gap:8px">
@@ -85,30 +67,20 @@
         </div>
         <div>
           <label>Controls</label>
-          <div class="row" style="gap:8px; align-items:center">
-            <button id="startRound">Start</button>
-            <button id="nextBtn" class="primary">Start Next</button>
-            <div>
-              <div class="pill" style="margin-bottom:4px">Live Timer</div>
-              <div id="hostTimer" class="timerRing"><span data-s>—</span></div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <label>Reveal Answer</label>
           <div class="row" style="gap:8px">
+            <button id="startRound" class="primary">Start</button>
+            <button id="revealBtn" class="danger">Reveal</button>
             <select id="revealSelect">
-              <option value="">—</option>
+              <option value="">Correct…</option>
               <option value="A">A</option>
               <option value="B">B</option>
               <option value="C">C</option>
               <option value="D">D</option>
             </select>
-            <button id="revealBtn" class="danger">Reveal</button>
+            <button id="advanceBtn">Next round</button>
           </div>
         </div>
       </div>
-      <div class="pill" style="margin-top:8px">Room: <b id="roomLabel">(not set)</b> · Teams: <b id="teamCount">0</b> · Phase: <b id="phaseLabel">—</b></div>
     </div>
   </section>
 
@@ -121,6 +93,7 @@
 </div>
 
 <script type="module">
+  // === FIREBASE CONFIG — REPLACE WITH YOURS ===
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -138,241 +111,151 @@
   const app = FBApp.initializeApp(firebaseConfig);
   const db  = FBDB.getDatabase(app);
 
-  const el=id=>document.getElementById(id);
+  // Helpers
+  const $ = id=>document.getElementById(id);
   const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
   const money=n=>'£'+Number(n||0).toLocaleString();
 
-  let room = new URLSearchParams(location.search).get('room') || localStorage.getItem('mpd_room') || '';
-  const roomInput=el('roomInput'); const joinBtn=el('joinBtn');
-  const prevRound=el('prevRound'); const nextRound=el('nextRound'); const roundInput=el('roundInput');
-  const timerInput=el('timerInput'); const startRound=el('startRound'); const nextBtn=el('nextBtn');
-  const revealSelect=el('revealSelect'); const revealBtn=el('revealBtn');
-  const teamsGrid=el('teamsGrid'); const roomLabel=el('roomLabel'); const teamCount=el('teamCount'); const phaseLabel=el('phaseLabel');
-  const hostTimer = el('hostTimer');
+  // UI refs
+  const roomInput=$('roomInput'); const joinBtn=$('joinBtn');
+  const prevRound=$('prevRound'); const nextRound=$('nextRound'); const roundInput=$('roundInput');
+  const timerInput=$('timerInput'); const startRound=$('startRound');
+  const revealSelect=$('revealSelect'); const revealBtn=$('revealBtn');
+  const advanceBtn=$('advanceBtn');
+  const teamsGrid=$('teamsGrid');
 
+  // State
+  let room = new URLSearchParams(location.search).get('room') || localStorage.getItem('mpd_room') || '';
   roomInput.value = room;
 
   const roomPath = ()=>`rooms/${room}`;
-  const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
-  const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
+  const settingsRef = ()=> FBDB.ref(db, roomPath()+`/settings`);
+  const teamsRef    = ()=> FBDB.ref(db, roomPath()+`/teams`);
 
-  let settingsCache = { number:1, phase:'between', correct:'', timer:null };
-  let teamsCache = {};
-  let hostRAF = null;
-
-  function namesOf(obj){ return Object.keys(obj||{}); }
-
-  async function ensureRoom(){
-    if(!room) return;
-    roomLabel.textContent = room;
-    try{
-      const sSnap = await FBDB.get(settingsRef());
-      if(!sSnap.exists()){
-        await FBDB.set(settingsRef(), { number: 1, phase: 'between', correct: '', timer: null, createdAt: Date.now() });
-      }
-      subscribe();
-    }catch(e){
-      console.error(e); alert('Could not create/join room: '+(e?.message||e));
-    }
-  }
-
+  // Join / create room
   async function joinRoom(){
     room = roomInput.value.trim();
     if(!room){ alert('Enter a room code'); return; }
     localStorage.setItem('mpd_room', room);
-    await ensureRoom();
+    await FBDB.update(settingsRef(), { createdAt: Date.now() });
+    subscribe();
   }
   joinBtn.addEventListener('click', joinRoom);
 
-  prevRound.addEventListener('click', ()=>{ roundInput.value = clamp(Number(roundInput.value)-1,1,999); updateRoundNumber(); });
-  nextRound.addEventListener('click', ()=>{ roundInput.value = clamp(Number(roundInput.value)+1,1,999); updateRoundNumber(); });
-
-  async function updateRoundNumber(){
-    if(!room) return; const r = clamp(roundInput.value,1,999);
-    await FBDB.update(settingsRef(), { number: r }).catch(()=>{});
-  }
-
-  function setHostRing(sec, duration, active){
-    if(!hostTimer) return;
-    const pct = !active || !duration ? 0 : Math.max(0, Math.min(1, sec / duration)) * 100;
-    hostTimer.style.setProperty('--pct', pct);
-    hostTimer.querySelector('[data-s]').textContent = active ? `${Math.max(0,Math.ceil(sec))}s` : '—';
-  }
-
-  // === TIMEOUT ENFORCER ===
-  async function handleTimeoutIfDue(v){
-    const t = v && v.timer;
-    if(!(v && v.phase === 'active' && t && t.startAt && t.duration > 0)) return;
-    if(t.expiredAt) return; // already processed
-    const deadline = t.startAt + t.duration*1000;
-    if(Date.now() < deadline) return;
-
-    try{
-      const snapshot = await FBDB.get(teamsRef());
-      const teams = snapshot.val() || {};
-      const updates = {};
+  // Start round
+  async function hostStart(){
+    if(!room){ alert('Set a room code first.'); return; }
+    const number = clamp(roundInput.value,1,999);
+    const duration = clamp(timerInput.value,0,999);
+    await FBDB.update(settingsRef(), { number, phase:'active', correct:'', timer:{ startAt: Date.now(), duration } });
+    // Unlock alive teams + clear alloc
+    const s = await FBDB.get(teamsRef());
+    if(s.exists()){
+      const teams = s.val(); const updates={};
       Object.keys(teams).forEach(k=>{
-        const T = teams[k] || {};
-        const alive  = !(T.dead === true) && Number(T.balance || 0) > 0;
-        const locked = T.locked === true;
-        if(alive && !locked){
-          updates[`${roomPath()}/teams/${k}/balance`] = 0;
-          updates[`${roomPath()}/teams/${k}/dead`]    = true;
-          updates[`${roomPath()}/teams/${k}/locked`]  = true;
-        }
-      });
-      updates[`${roomPath()}/settings/phase`] = 'locked';
-      updates[`${roomPath()}/settings/timer/expiredAt`] = Date.now();
-      if(Object.keys(updates).length) await FBDB.update(FBDB.ref(db), updates);
-    }catch(e){ console.error('timeout processing failed:', e); }
-  }
-
-  function bindHostCountdown(v){
-    if(hostRAF) cancelAnimationFrame(hostRAF);
-    const t = v && v.timer;
-    const active = v && v.phase === 'active' && t && t.startAt && t.duration > 0;
-    if(!active){ setHostRing(0,0,false); return; }
-    const deadline = t.startAt + t.duration*1000;
-    function tick(){
-      const remainingSec = Math.max(0, (deadline - Date.now())/1000);
-      setHostRing(remainingSec, t.duration, v.phase === 'active');
-      if(remainingSec > 0 && v.phase === 'active') hostRAF = requestAnimationFrame(tick);
-      else handleTimeoutIfDue(v);
-    }
-    tick();
-  }
-
-  async function startWithNumber(targetRound){
-    const dur = clamp(timerInput.value,0,999);
-    const snap = await FBDB.get(teamsRef());
-    const teams = snap.val() || {};
-    const updates = {};
-    Object.keys(teams).forEach(k=>{
-      const t = teams[k] || {};
-      const dead = t.dead === true || Number(t.balance||0) <= 0;
-      if(dead){
-        updates[`${roomPath()}/teams/${k}/locked`] = true;
-      } else {
-        updates[`${roomPath()}/teams/${k}/alloc`]  = {A:0,B:0,C:0,D:0};
+        const t=teams[k]||{}; if(t.dead===true || Number(t.balance||0)<=0) return;
         updates[`${roomPath()}/teams/${k}/locked`] = false;
-      }
-    });
-    updates[`${roomPath()}/settings/number`]  = targetRound;
-    updates[`${roomPath()}/settings/phase`]   = 'active';
-    updates[`${roomPath()}/settings/correct`] = '';
-    updates[`${roomPath()}/settings/timer`]   = { startAt: Date.now(), duration: dur };
-    await FBDB.update(FBDB.ref(db), updates).catch(e=> alert('Start failed: '+(e?.message||e)) );
-  }
-
-  async function doStart(){
-    if(!room) return;
-    const current = clamp(roundInput.value,1,999);
-    await startWithNumber(current);
-  }
-  startRound.addEventListener('click', doStart);
-
-  async function doStartNext(){
-    if(!room) return;
-    const nextRoundNum = clamp(roundInput.value,1,999) + 1;
-    roundInput.value = nextRoundNum;
-    await startWithNumber(nextRoundNum);
-  }
-  nextBtn.addEventListener('click', doStartNext);
-
-  async function doReveal(){
-    if(!room) return; const correct = revealSelect.value; if(!correct){ alert('Pick the correct option.'); return; }
-    await FBDB.update(settingsRef(), { phase:'revealed', correct }).catch(()=>{});
-
-    const snapshot = await FBDB.get(teamsRef());
-    if(snapshot.exists()){
-      const teams = snapshot.val(); const updates = {};
-      Object.keys(teams).forEach(k=>{
-        const t = teams[k] || {}; const alloc = t.alloc || {A:0,B:0,C:0,D:0};
-        const lost = ['A','B','C','D'].filter(x=>x!==correct).reduce((s,key)=> s + (Number(alloc[key])||0), 0);
-        const next = Math.max(0, Number(t.balance ?? 1000000) - lost);
-        updates[`${roomPath()}/teams/${k}/balance`] = next;
-        if(next <= 0){ updates[`${roomPath()}/teams/${k}/dead`] = true; updates[`${roomPath()}/teams/${k}/locked`] = true; }
+        updates[`${roomPath()}/teams/${k}/alloc`] = {A:0,B:0,C:0,D:0};
       });
-      await FBDB.update(FBDB.ref(db), updates).catch(e=> alert('Reveal failed: '+(e?.message||e)) );
+      if(Object.keys(updates).length) await FBDB.update(FBDB.ref(db), updates);
     }
   }
-  revealBtn.addEventListener('click', doReveal);
+
+  // Auto-lock when all locked or timer ends
+  async function maybeLock(){
+    const stSnap = await FBDB.get(settingsRef()); const st = stSnap.val()||{};
+    if(st.phase!=='active') return;
+    const t = st.timer || {}; const deadline = (t.startAt||0) + (t.duration||0)*1000;
+    const now = Date.now();
+    const teamsSnap = await FBDB.get(teamsRef()); const teams = teamsSnap.val()||{};
+    const aliveKeys = Object.keys(teams).filter(k=> !(teams[k]?.dead===true) && Number(teams[k]?.balance||0)>0 );
+    const allLocked = aliveKeys.length>0 && aliveKeys.every(k=> teams[k]?.locked===true);
+    if(allLocked || (t.duration>0 && now>=deadline)){
+      await FBDB.update(settingsRef(), { phase:'locked' });
+    }
+  }
+
+  // Reveal answer and settle balances
+  async function hostReveal(){
+    if(!room) return; const correct = revealSelect.value; if(!correct){ alert('Pick the correct option.'); return; }
+    await FBDB.update(settingsRef(), { phase:'revealed', correct });
+    const s = await FBDB.get(teamsRef());
+    if(s.exists()){
+      const teams = s.val(); const updates={};
+      Object.keys(teams).forEach(k=>{
+        const t=teams[k]||{}; if(t.dead===true) return;
+        const bal = Number(t.balance||0);
+        const a = t.alloc||{A:0,B:0,C:0,D:0};
+        const lost = ['A','B','C','D'].filter(x=>x!==correct).reduce((sum,opt)=> sum + (Number(a[opt])||0), 0);
+        const next = Math.max(0, bal - lost);
+        updates[`${roomPath()}/teams/${k}/balance`] = next;
+        updates[`${roomPath()}/teams/${k}/locked`]  = true; // keep locked until Start
+        if(next===0) updates[`${roomPath()}/teams/${k}/dead`]=true;
+      });
+      if(Object.keys(updates).length) await FBDB.update(FBDB.ref(db), updates);
+    }
+  }
+
+  // Advance to next round (keep teams locked)
+  async function hostAdvance(){
+    const n = clamp(roundInput.value,1,999)+1; roundInput.value = n;
+    await FBDB.update(settingsRef(), { number:n, phase:'between', correct:'', timer:{ startAt:0, duration: clamp(timerInput.value,0,999) } });
+  }
+
+  startRound.addEventListener('click', hostStart);
+  revealBtn.addEventListener('click', hostReveal);
+  advanceBtn.addEventListener('click', hostAdvance);
+  prevRound.addEventListener('click', ()=>{ roundInput.value = clamp(Number(roundInput.value)-1,1,999); });
+  nextRound.addEventListener('click', ()=>{ roundInput.value = clamp(Number(roundInput.value)+1,1,999); });
 
   function teamBars(label, val, pct, cls){
-    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div class="money">${money(val)}</div></div>`;
+    return `<div class="barRow"><div>${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div style="text-align:right">£${Number(val||0).toLocaleString()}</div></div>`;
   }
-
   function renderTeamsHtml(teams, state){
-    const names = namesOf(teams).sort();
     const correct = state.correct || '';
-    const isRevealed = state.phase==='revealed' && !!correct;
-    return names.map(name=>{
-      const t = teams[name] || {};
-      const alloc = t.alloc || {A:0,B:0,C:0,D:0};
-      const total = Number(alloc.A||0)+Number(alloc.B||0)+Number(alloc.C||0)+Number(alloc.D||0);
-      const bal   = Number(t.balance != null ? t.balance : 1000000);
+    const revealed = state.phase==='revealed' && !!correct;
+    const names = Object.keys(teams||{}).sort();
+    return names.map(key=>{
+      const t = teams[key]||{}; const name=t.name||decodeURIComponent(key)||key; const a=t.alloc||{A:0,B:0,C:0,D:0};
+      const total = (Number(a.A)||0)+(Number(a.B)||0)+(Number(a.C)||0)+(Number(a.D)||0);
       const pct = x => total>0 ? Math.round((Number(x)/Math.max(total,1))*100) : 0;
-      const barCls = opt => isRevealed ? (opt===correct? 'bar good' : 'bar bad') : 'bar';
-      const dropClass = opt => (isRevealed && opt!==correct)? ' drop':'';
-      const lockBadge = t.dead ? ' · <span class="pill">DEAD</span>' : (t.locked ? ' · <span class="pill">LOCKED</span>' : '');
-
+      const barCls = opt => revealed ? (opt===correct?'bar good':'bar bad') : 'bar';
+      const bal = Number(t.balance!=null?t.balance:1000000);
       return `
         <div class="card"><div class="pad">
-          <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${t.name||name}</h4><div class="pill">Balance: ${money(bal)}${lockBadge}</div></div>
-          ${teamBars('A', alloc.A||0, pct(alloc.A||0), barCls('A'))}
-          ${teamBars('B', alloc.B||0, pct(alloc.B||0), barCls('B'))}
-          ${teamBars('C', alloc.C||0, pct(alloc.C||0), barCls('C'))}
-          ${teamBars('D', alloc.D||0, pct(alloc.D||0), barCls('D'))}
+          <div class="row" style="justify-content:space-between;align-items:baseline"><h4>${name}</h4><div class="pill">Balance: ${money(bal)} ${t.dead? '· DEAD':''}</div></div>
+          ${teamBars('A', a.A, pct(a.A), barCls('A'))}
+          ${teamBars('B', a.B, pct(a.B), barCls('B'))}
+          ${teamBars('C', a.C, pct(a.C), barCls('C'))}
+          ${teamBars('D', a.D, pct(a.D), barCls('D'))}
           <div class="tray" style="margin-top:8px">
-            <div class="cell${dropClass('A')}">A: ${money(alloc.A||0)}</div>
-            <div class="cell${dropClass('B')}">B: ${money(alloc.B||0)}</div>
-            <div class="cell${dropClass('C')}">C: ${money(alloc.C||0)}</div>
-            <div class="cell${dropClass('D')}">D: ${money(alloc.D||0)}</div>
+            <div class="cell">A: £${Number(a.A||0).toLocaleString()}</div>
+            <div class="cell">B: £${Number(a.B||0).toLocaleString()}</div>
+            <div class="cell">C: £${Number(a.C||0).toLocaleString()}</div>
+            <div class="cell">D: £${Number(a.D||0).toLocaleString()}</div>
           </div>
         </div></div>`;
     }).join('');
   }
 
-  function autoLockCheck(){
-    const state = settingsCache; const teams = teamsCache;
-    if(!state || state.phase !== 'active') return;
-    const teamKeys = namesOf(teams);
-    const living = teamKeys.filter(k=>{
-      const t=teams[k]||{}; return !(t.dead===true || Number(t.balance||0) <= 0);
-    });
-    if(living.length===0) return;
-    const lockedCount = living.filter(k=> (teams[k]||{}).locked === true ).length;
-    if(lockedCount === living.length){
-      FBDB.update(settingsRef(), { phase: 'locked' }).catch(()=>{});
-    }
-  }
-
   function subscribe(){
-    if(!room) return;
+    if(!room || !db) return;
+    // Any settings change -> redraw, and check lock condition
     FBDB.onValue(settingsRef(), snap=>{
-      const v = snap.val() || { number:1, phase:'between', correct:'', timer:null };
-      settingsCache = v;
+      const v = snap.val() || { number:1, phase:'between', correct:'', timer:{startAt:0,duration:45} };
       roundInput.value = v.number || 1;
-      phaseLabel.textContent = v.phase;
-      bindHostCountdown(v);
-      FBDB.get(teamsRef()).then(ts=>{
-        teamsGrid.innerHTML = renderTeamsHtml(ts.val()||{}, v);
-        teamCount.textContent = Object.keys(ts.val()||{}).length;
-      });
-      autoLockCheck();
+      timerInput.value = (v.timer && v.timer.duration) || 45;
+      FBDB.get(teamsRef()).then(s=>{ teamsGrid.innerHTML = renderTeamsHtml(s.val()||{}, v); });
+      maybeLock();
     });
-
+    // Team changes -> redraw, and check lock condition
     FBDB.onValue(teamsRef(), snap=>{
-      teamsCache = snap.val() || {};
-      teamCount.textContent = Object.keys(teamsCache).length;
-      FBDB.get(settingsRef()).then(s=>{
-        teamsGrid.innerHTML = renderTeamsHtml(teamsCache, s.val()||settingsCache);
-      });
-      autoLockCheck();
+      const teams = snap.val() || {};
+      FBDB.get(settingsRef()).then(rSnap=>{ const st=rSnap.val()||{}; teamsGrid.innerHTML = renderTeamsHtml(teams, st); maybeLock(); });
     });
   }
 
-  if(room){ roomInput.value = room; ensureRoom(); }
+  if(room){ subscribe(); }
 </script>
 </body>
 </html>
