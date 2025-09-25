@@ -28,15 +28,6 @@
       var(--bg);
       overflow-x:hidden}
 
-    /* Ambient particles */
-    .bgSpark{position:fixed;inset:-10% -10% auto -10%;height:160vh;pointer-events:none;opacity:.35;
-      background-image:
-        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,.28) 0, rgba(255,255,255,0) 60%),
-        radial-gradient(2px 2px at 80% 40%, rgba(255,255,255,.22) 0, rgba(255,255,255,0) 60%),
-        radial-gradient(2px 2px at 40% 80%, rgba(255,255,255,.2) 0, rgba(255,255,255,0) 60%);
-      animation: drift 36s linear infinite}
-    @keyframes drift{0%{transform:translateY(0)}100%{transform:translateY(-10%)} }
-
     .wrap{max-width:1400px;margin:0 auto;padding:28px 16px 120px}
     header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
     .title{font-weight:900;font-size:34px;letter-spacing:.4px;text-shadow:0 1px 0 rgba(255,255,255,.06), 0 10px 28px rgba(139,92,246,.22)}
@@ -52,36 +43,32 @@
     .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
     input,button{background:#0e1637;border:1px solid rgba(255,255,255,.14);color:var(--ink);border-radius:14px;padding:10px 12px;font-size:15px}
     button{cursor:pointer;border:1px solid rgba(255,255,255,.18);background:linear-gradient(180deg,#1a2a68 0,#14204f 100%);box-shadow:0 8px 22px rgba(0,0,0,.35)}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(13,21,51,.85);border:1px solid rgba(255,255,255,.14);font-size:12px;color:var(--muted)}
 
-    /* LEFT COLUMN — SCOREBOARD */
-    .scoreHead{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
-    .revealBadge{display:grid;place-items:center;width:110px;height:110px;border-radius:999px;background:radial-gradient(closest-side,rgba(255,255,255,.08),rgba(255,255,255,.02));
+    /* LEFT COLUMN — Answer + Countdown + Leaderboard */
+    .scoreHead{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:center}
+    .revealBadge{display:grid;place-items:center;width:140px;height:140px;margin:0 auto;border-radius:999px;background:radial-gradient(closest-side,rgba(255,255,255,.08),rgba(255,255,255,.02));
       border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 0 18px rgba(255,255,255,.12), 0 12px 30px rgba(0,0,0,.4);position:relative}
-    .revealBadge span{font-family:"Chivo Mono",monospace;font-weight:900;font-size:42px;letter-spacing:1px}
+    .revealBadge span{font-family:"Chivo Mono",monospace;font-weight:900;font-size:54px;letter-spacing:1px}
     .revealBadge.revealed{background:radial-gradient(closest-side, rgba(94,234,212,.15), rgba(139,92,246,.12));box-shadow:0 0 80px rgba(94,234,212,.25)}
-    .revealLabel{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800;opacity:.95}
+    .revealLabel{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800;opacity:.95}
     .revealBadge.revealed .revealLabel{color:#eafffa;text-shadow:0 0 18px rgba(94,234,212,.35)}
 
-    .bigStats{display:flex;gap:10px;align-items:center}
-    .bigStats .round{font-size:40px;font-weight:900}
-    .phaseChip{font-weight:800;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#041316}
+    .countWrap{display:grid;place-items:center}
+    .timerRing{ --pct:0; width:140px; height:140px; border-radius:999px; display:grid; place-items:center; position:relative; background: conic-gradient(var(--accent) calc(var(--pct)*1%), rgba(255,255,255,.08) 0); box-shadow:0 0 28px rgba(94,234,212,.2) inset, 0 0 10px rgba(94,234,212,.25) }
+    .timerRing::before{ content:""; position:absolute; inset:10px; border-radius:inherit; background:#0b1020; box-shadow:inset 0 0 0 1px rgba(255,255,255,.06) }
+    .timerRing span{ position:relative; font-weight:900; font-family:"Chivo Mono", monospace; font-size:34px }
+    .timerLabel{margin-top:8px; color:var(--muted); font-weight:800; letter-spacing:.12em; text-transform:uppercase}
 
-    .totals{margin-top:12px;display:grid;gap:12px}
-    .totRow{display:grid;grid-template-columns:46px 1fr 140px;align-items:center;gap:12px}
-    .totBar{height:22px;background:rgba(11,20,52,.6);border:1px solid rgba(255,255,255,.12);border-radius:999px;overflow:hidden}
-    .totBar>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,rgba(94,234,212,.22),rgba(94,234,212,.95));transition:width .8s cubic-bezier(.22,1,.36,1)}
-    .totBar.good>span{background:linear-gradient(90deg,rgba(34,197,94,.25),rgba(34,197,94,.95))}
-    .totBar.bad>span{background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(239,68,68,.95))}
-
-    .leader{margin-top:14px}
+    .leader{margin-top:10px}
     .leaderRow{display:grid;grid-template-columns:56px 1fr 160px;gap:10px;align-items:center;padding:10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
     .medal{width:36px;height:36px;border-radius:999px;display:grid;place-items:center;font-weight:900}
     .medal.g{background:linear-gradient(135deg,#ffd166,#f59e0b)}
     .medal.s{background:linear-gradient(135deg,#cbd5e1,#94a3b8)}
     .medal.b{background:linear-gradient(135deg,#fca5a5,#fb7185)}
+    .leaderRow .name{font-size:18px;font-weight:900}
+    .leaderRow .bal{font-family:"Chivo Mono",monospace;font-size:20px;font-weight:900;text-align:right}
 
-    /* RIGHT COLUMN — TEAMS GRID */
+    /* RIGHT COLUMN — TEAMS GRID (unchanged) */
     .teamsGrid{display:grid;gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
     @media(max-width:1180px){.teamsGrid{grid-template-columns:1fr}}
     .teamCard{position:relative;background:linear-gradient(180deg,rgba(18,28,70,.8),rgba(10,18,52,.9));border:1px solid rgba(255,255,255,.1);border-radius:18px;box-shadow:0 14px 40px rgba(0,0,0,.45);overflow:hidden}
@@ -108,14 +95,9 @@
     .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}
     .confetti span{position:absolute;width:10px;height:16px;background:var(--c);opacity:.95;transform:translateY(-20vh) rotate(0deg);animation:fall 1600ms ease-out forwards}
     @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:1}}
-
-    /* Leaderboard emphasis */
-    .leaderRow .name{font-size:18px;font-weight:900}
-    .leaderRow .bal{font-family:"Chivo Mono",monospace;font-size:20px;font-weight:900}
   </style>
 </head>
 <body>
-<div class="bgSpark"></div>
 <div class="wrap">
   <header>
     <div>
@@ -129,23 +111,17 @@
   </header>
 
   <section class="grid cols-2">
-    <!-- LEFT: SCOREBOARD / TOTALS / LEADERBOARD -->
+    <!-- LEFT: Answer + Countdown + Leaderboard -->
     <div class="card scoreCard">
       <div class="pad">
         <div class="scoreHead">
-          <div class="bigStats">
-            <div class="pill">Round</div>
-            <div class="round" id="specRound">—</div>
-            <div class="phaseChip" id="specPhase">—</div>
-          </div>
           <div class="revealBadge" id="revealBadge"><span id="specCorrect">?</span><div class="revealLabel">Answer</div></div>
+          <div class="countWrap">
+            <div class="timerRing" id="timerRing"><span id="timerText">—</span></div>
+            <div class="timerLabel">Countdown</div>
+          </div>
         </div>
-        <div class="pill" style="margin-top:10px">Room: <b id="specRoom">(not set)</b> · Teams: <b id="specTeamCount">0</b> · Alive: <b id="aliveCount">0</b></div>
-
-        <h3 style="margin:14px 0 6px">Totals</h3>
-        <div class="totals" id="totals"></div>
-
-        <h3 class="leader" style="margin:14px 0 6px">Leaderboard</h3>
+        <h3 class="leader" style="margin:16px 0 8px">Leaderboard</h3>
         <div id="leaderboard"></div>
       </div>
     </div>
@@ -185,18 +161,19 @@
 
   let room = new URLSearchParams(location.search).get('room') || localStorage.getItem('mpd_room') || '';
   const roomInput=$('roomInput'); const joinBtn=$('joinBtn');
-  const specRoom=$('specRoom'); const specRound=$('specRound'); const specPhase=$('specPhase'); const specCorrect=$('specCorrect');
-  const specTeamCount=$('specTeamCount'); const aliveCount=$('aliveCount'); const revealBadge=$('revealBadge');
-  const totalsEl=$('totals'); const leaderboardEl=$('leaderboard'); const grid=$('spectatorGrid');
+  const specCorrect=$('specCorrect'); const revealBadge=$('revealBadge');
+  const leaderboardEl=$('leaderboard'); const grid=$('spectatorGrid');
   const confetti=$('confetti');
 
-  roomInput.value = room; if(room) specRoom.textContent = room;
+  const timerRing=$('timerRing'); const timerText=$('timerText');
+
+  roomInput.value = room;
 
   const roomPath = ()=>`rooms/${room}`;
   const settingsRef=()=> FBDB.ref(db, roomPath()+`/settings`);
   const teamsRef  =()=> FBDB.ref(db, roomPath()+`/teams`);
 
-  // Confetti burst on reveal
+  // Confetti on reveal
   let lastPhase = '';
   function burst(){
     confetti.innerHTML = '';
@@ -213,36 +190,36 @@
     setTimeout(()=> confetti.innerHTML='', 1800);
   }
 
-  function renderTotals(teams, state){
-    const allocSum = {A:0,B:0,C:0,D:0};
-    const names = Object.keys(teams||{});
-    names.forEach(k=>{
-      const a = (teams[k]?.alloc) || {A:0,B:0,C:0,D:0};
-      allocSum.A += Number(a.A)||0; allocSum.B += Number(a.B)||0; allocSum.C += Number(a.C)||0; allocSum.D += Number(a.D)||0;
-    });
-    const totalAll = Math.max(1, allocSum.A+allocSum.B+allocSum.C+allocSum.D);
-    const correct = state.correct || '';
-    const revealed = state.phase==='revealed' && !!correct;
-
-    const makeRow = (label,val)=>{
-      const pct = Math.round((val/totalAll)*100);
-      const cls = revealed ? (label===correct? 'totBar good' : 'totBar bad') : 'totBar';
-      return `<div class="totRow"><div class="pill" style="text-align:center;font-weight:800">${label}</div><div class="${cls}"><span style="width:${pct}%"></span></div><div style="text-align:right;font-variant-numeric:tabular-nums">${money(val)} · ${pct}%</div></div>`;
+  // Countdown ring
+  let rafId=null;
+  function setRing(sec, duration, active){
+    const pct = !active || !duration ? 0 : Math.max(0, Math.min(1, sec / duration)) * 100;
+    timerRing.style.setProperty('--pct', pct);
+    timerText.textContent = active ? `${Math.max(0,Math.ceil(sec))}s` : '—';
+  }
+  function bindCountdown(v){
+    if(rafId) cancelAnimationFrame(rafId);
+    const t=v&&v.timer; const active=v&&v.phase==='active'&&t&&t.startAt&&t.duration>0;
+    if(!active){ setRing(0,0,false); return; }
+    const deadline=t.startAt+t.duration*1000;
+    const tick=()=>{
+      const sec=Math.max(0,(deadline-Date.now())/1000);
+      setRing(sec, t.duration, v.phase==='active');
+      if(sec>0 && v.phase==='active') rafId=requestAnimationFrame(tick); else setRing(0,0,false);
     };
-
-    totalsEl.innerHTML = makeRow('A', allocSum.A) + makeRow('B', allocSum.B) + makeRow('C', allocSum.C) + makeRow('D', allocSum.D);
+    tick();
   }
 
   function renderLeaderboard(teams){
     const arr = Object.keys(teams||{}).map(k=>{
       const t=teams[k]||{}; return {name:t.name||decodeURIComponent(k)||k, bal:Number(t.balance??1000000), dead: !!t.dead};
-    }).sort((a,b)=> b.bal - a.bal).slice(0,6);
+    }).sort((a,b)=> b.bal - a.bal).slice(0,8);
 
     leaderboardEl.innerHTML = arr.map((t,i)=>{
       const m = i===0?'g':i===1?'s':'b';
       const medal = `<div class="medal ${i<3?m:''}">${i+1}</div>`;
       const name = `<div class="name">${t.name}${t.dead?' <span class="pill" style="margin-left:6px">ELIM</span>':''}</div>`;
-      const bal  = `<div class="bal" style="text-align:right">${money(t.bal)}</div>`;
+      const bal  = `<div class="bal">${money(t.bal)}</div>`;
       return `<div class="leaderRow">${medal}${name}${bal}</div>`;
     }).join('');
   }
@@ -263,17 +240,17 @@
         <div class="pad">
           <div class="row" style="justify-content:space-between;align-items:center">
             <h4 class="teamName">${name}</h4>
-            <div class="balanceChip"><small>Balance</small> ${money(bal)} ${isDead? '· DEAD':''}</div>
+            <div class="balanceChip"><small>Balance</small> £${bal.toLocaleString()} ${isDead? '· DEAD':''}</div>
           </div>
-          <div class="barRow"><div>A</div><div class="${barCls('A')}"><span style="width:${pct(alloc.A)}%"></span></div><div style="text-align:right">${money(alloc.A||0)}</div></div>
-          <div class="barRow"><div>B</div><div class="${barCls('B')}"><span style="width:${pct(alloc.B)}%"></span></div><div style="text-align:right">${money(alloc.B||0)}</div></div>
-          <div class="barRow"><div>C</div><div class="${barCls('C')}"><span style="width:${pct(alloc.C)}%"></span></div><div style="text-align:right">${money(alloc.C||0)}</div></div>
-          <div class="barRow"><div>D</div><div class="${barCls('D')}"><span style="width:${pct(alloc.D)}%"></span></div><div style="text-align:right">${money(alloc.D||0)}</div></div>
+          <div class="barRow"><div>A</div><div class="${barCls('A')}"><span style="width:${pct(alloc.A)}%"></span></div><div style="text-align:right">£${(alloc.A||0).toLocaleString()}</div></div>
+          <div class="barRow"><div>B</div><div class="${barCls('B')}"><span style="width:${pct(alloc.B)}%"></span></div><div style="text-align:right">£${(alloc.B||0).toLocaleString()}</div></div>
+          <div class="barRow"><div>C</div><div class="${barCls('C')}"><span style="width:${pct(alloc.C)}%"></span></div><div style="text-align:right">£${(alloc.C||0).toLocaleString()}</div></div>
+          <div class="barRow"><div>D</div><div class="${barCls('D')}"><span style="width:${pct(alloc.D)}%"></span></div><div style="text-align:right">£${(alloc.D||0).toLocaleString()}</div></div>
           <div class="tray" style="margin-top:8px">
-            <div class="cell">A: ${money(alloc.A||0)}</div>
-            <div class="cell">B: ${money(alloc.B||0)}</div>
-            <div class="cell">C: ${money(alloc.C||0)}</div>
-            <div class="cell">D: ${money(alloc.D||0)}</div>
+            <div class="cell">A: £${(alloc.A||0).toLocaleString()}</div>
+            <div class="cell">B: £${(alloc.B||0).toLocaleString()}</div>
+            <div class="cell">C: £${(alloc.C||0).toLocaleString()}</div>
+            <div class="cell">D: £${(alloc.D||0).toLocaleString()}</div>
           </div>
         </div>
         ${isDead? '<div class="deadMark" aria-hidden="true">✕</div><div class="deadLabel">ELIMINATED</div>':''}
@@ -293,29 +270,26 @@
   function subscribe(){
     if(!room) return;
     FBDB.onValue(settingsRef(), s=>{
-      const v = s.val() || {number:1,phase:'between',correct:''};
-      specRound.textContent = v.number || '—';
-      specPhase.textContent = v.phase || '—';
+      const v = s.val() || {phase:'between',correct:''};
       specCorrect.textContent = v.correct || '—';
       revealBadge.classList.toggle('revealed', v.phase==='revealed');
+      bindCountdown(v);
       if(lastPhase !== 'revealed' && v.phase === 'revealed'){ burst(); }
       lastPhase = v.phase || '';
       FBDB.get(teamsRef()).then(ts=>{
-        const teams = ts.val()||{}; specTeamCount.textContent = Object.keys(teams).length;
-        const alive = Object.values(teams).filter(t=> !(t?.dead===true || Number(t?.balance||0)<=0)).length; aliveCount.textContent = alive;
-        renderTotals(teams, v); renderLeaderboard(teams); renderTeams(teams, v);
+        const teams = ts.val()||{};
+        renderLeaderboard(teams); renderTeams(teams, v);
       });
     });
     FBDB.onValue(teamsRef(), t=>{
-      const teams = t.val()||{}; specTeamCount.textContent = Object.keys(teams).length;
-      const alive = Object.values(teams).filter(tt=> !(tt?.dead===true || Number(tt?.balance||0)<=0)).length; aliveCount.textContent = alive;
-      FBDB.get(settingsRef()).then(s=>{ const v=s.val()||{}; renderTotals(teams, v); renderLeaderboard(teams); renderTeams(teams, v); });
+      const teams = t.val()||{};
+      FBDB.get(settingsRef()).then(s=>{ const v=s.val()||{}; renderLeaderboard(teams); renderTeams(teams, v); });
     });
   }
 
   function joinRoom(){
     room = roomInput.value.trim(); if(!room){ alert('Enter a room code'); return; }
-    localStorage.setItem('mpd_room', room); specRoom.textContent = room; subscribe();
+    localStorage.setItem('mpd_room', room); subscribe();
   }
   joinBtn.addEventListener('click', joinRoom);
 
