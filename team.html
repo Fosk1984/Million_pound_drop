@@ -137,6 +137,8 @@
   const teamMsg=el('teamMsg'); const teamBalance=el('teamBalance'); const timeLeft=el('timeLeft'); const roundNum=el('roundNum');
 
   roomInput.value=room; teamInput.value=teamName;
+  // Hide room box if launched via QR (room present)
+  if(room){ roomInput.style.display = 'none'; }
 
   const roomPath=()=>`rooms/${room}`;
   const settingsRef=()=>FBDB.ref(db, roomPath()+`/settings`);
@@ -165,7 +167,16 @@
   clearBtn.addEventListener('click',()=>{ aInput.value=bInput.value=cInput.value=dInput.value=0; refreshAllocUI(); });
 
   async function joinRoom(){
-    room = roomInput.value.trim(); teamName = teamInput.value.trim(); if(!room){ alert('Enter a room code'); return; } if(!teamName){ alert('Enter a team name'); return; }
+    // If launched via QR, room already set; otherwise use typed value
+    room = room || roomInput.value.trim();
+    teamName = teamInput.value.trim();
+    if(!room){ alert('Room not found. Use the QR launcher or enter a room.'); return; }
+    if(!teamName){ alert('Enter a team name'); return; }
+    localStorage.setItem('mpd_room',room); localStorage.setItem('mpd_team',teamName);
+    await FBDB.update(FBDB.ref(db, roomPath()+`/settings`), { createdAt: Date.now() });
+    await FBDB.update(teamRef(), { name: teamName, balance: 1000000, lastSeen: Date.now(), locked: true });
+    subscribe();
+  } if(!teamName){ alert('Enter a team name'); return; }
     localStorage.setItem('mpd_room',room); localStorage.setItem('mpd_team',teamName);
     await FBDB.update(FBDB.ref(db, roomPath()+`/settings`), { createdAt: Date.now() });
     await FBDB.update(teamRef(), { name: teamName, balance: 1000000, lastSeen: Date.now(), locked: true });
