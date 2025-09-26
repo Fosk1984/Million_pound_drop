@@ -93,7 +93,7 @@
 </div>
 
 <script type="module">
-  // === FIREBASE CONFIG — REPLACE WITH YOURS ===
+  // === FIREBASE CONFIG — YOURS ===
   const firebaseConfig = {
     apiKey: "AIzaSyANcZCVJDa_mJ3usOdNulFwgNqQC4DFy4c",
     authDomain: "million-pound-drop-a1acc.firebaseapp.com",
@@ -142,19 +142,39 @@
   }
   joinBtn.addEventListener('click', joinRoom);
 
-  // Start round
+  // \n  // NEW FLOW per request:\n  // - "Next round" clears allocations (keeps teams locked, phase='between').\n  // - "Start" switches to phase='active', UNLOCKS alive teams and STARTS the timer.\n  //
+
+  // Start round: start timer + unlock alive teams (do NOT clear allocations here)
   async function hostStart(){
     if(!room){ alert('Set a room code first.'); return; }
     const number = clamp(roundInput.value,1,999);
     const duration = clamp(timerInput.value,0,999);
+    // Phase -> active with fresh timer
     await FBDB.update(settingsRef(), { number, phase:'active', correct:'', timer:{ startAt: Date.now(), duration } });
-    // Unlock alive teams + clear alloc
+    // Unlock alive teams only
     const s = await FBDB.get(teamsRef());
     if(s.exists()){
       const teams = s.val(); const updates={};
       Object.keys(teams).forEach(k=>{
         const t=teams[k]||{}; if(t.dead===true || Number(t.balance||0)<=0) return;
         updates[`${roomPath()}/teams/${k}/locked`] = false;
+      });
+      if(Object.keys(updates).length) await FBDB.update(FBDB.ref(db), updates);
+    }
+  }
+
+  // Next round: advance number, set between phase, CLEAR allocations, keep locked
+  async function hostAdvance(){
+    if(!room){ alert('Set a room code first.'); return; }
+    const next = clamp(roundInput.value,1,999) + 1; roundInput.value = next;
+    const duration = clamp(timerInput.value,0,999);
+    // phase between + reset timer placeholder
+    await FBDB.update(settingsRef(), { number: next, phase:'between', correct:'', timer:{ startAt:0, duration } });
+    // Clear allocations for all teams (alive or dead for consistency); keep locked as-is
+    const s = await FBDB.get(teamsRef());
+    if(s.exists()){
+      const teams = s.val(); const updates={};
+      Object.keys(teams).forEach(k=>{
         updates[`${roomPath()}/teams/${k}/alloc`] = {A:0,B:0,C:0,D:0};
       });
       if(Object.keys(updates).length) await FBDB.update(FBDB.ref(db), updates);
@@ -194,12 +214,6 @@
       });
       if(Object.keys(updates).length) await FBDB.update(FBDB.ref(db), updates);
     }
-  }
-
-  // Advance to next round (keep teams locked)
-  async function hostAdvance(){
-    const n = clamp(roundInput.value,1,999)+1; roundInput.value = n;
-    await FBDB.update(settingsRef(), { number:n, phase:'between', correct:'', timer:{ startAt:0, duration: clamp(timerInput.value,0,999) } });
   }
 
   startRound.addEventListener('click', hostStart);
